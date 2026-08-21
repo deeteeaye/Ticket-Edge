@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#101114" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ticket Edge" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+  <title>Ticket Edge</title>
+  <style>
+    :root{--bg:#0b0c0f;--panel:#14161b;--panel2:#1b1e25;--text:#f5f7fb;--muted:#a8afbd;--line:#292e39;--good:#6ee7a8;--warn:#ffd166;--bad:#ff7b7b;--accent:#8da2ff;--accent2:#c49cff}
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#0a0b0e,#10131a 60%,#0b0c0f);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+    button,input,select,textarea{font:inherit}.app{max-width:1100px;margin:auto;padding:18px 14px 90px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px}.brand h1{font-size:23px;margin:0}.brand p{margin:3px 0 0;color:var(--muted);font-size:13px}.pill{background:#1f2430;border:1px solid #303748;border-radius:999px;padding:8px 10px;font-size:12px;color:#cdd5e6}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.card{background:rgba(20,22,27,.94);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 12px 34px rgba(0,0,0,.18)}.metric .label{font-size:12px;color:var(--muted)}.metric .value{font-size:23px;font-weight:750;margin-top:4px}.metric .sub{font-size:11px;margin-top:3px;color:var(--muted)}
+    .section{margin-top:13px}.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.btn{border:1px solid #323848;background:#1b1f29;color:var(--text);border-radius:11px;padding:10px 12px;cursor:pointer}.btn.primary{background:linear-gradient(135deg,#667eea,#8b5cf6);border-color:transparent;font-weight:700}.btn.good{background:#143325;border-color:#275b42;color:#b8f6d3}.btn.danger{background:#35191d;border-color:#61292f;color:#ffc2c7}.btn.small{padding:7px 9px;font-size:12px}.search{flex:1;min-width:180px;background:#101218;border:1px solid #2a303b;color:white;border-radius:11px;padding:10px 12px}.filters{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:9px}.filters select,.filters input,.form input,.form select,.form textarea{width:100%;background:#101218;border:1px solid #2a303b;color:white;border-radius:10px;padding:10px}.list{display:grid;gap:9px;margin-top:11px}.event{display:grid;grid-template-columns:1.55fr .95fr .65fr .7fr auto;gap:12px;align-items:center;background:#11141a;border:1px solid #252a34;border-radius:14px;padding:12px}.event h3{font-size:15px;margin:0 0 4px}.event .meta{font-size:12px;color:var(--muted)}.event .num{font-size:13px}.score{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:800;border:3px solid #445}.score.hot{border-color:var(--good);color:var(--good)}.score.mid{border-color:var(--warn);color:var(--warn)}.score.cold{border-color:var(--bad);color:var(--bad)}.tag{display:inline-block;padding:3px 7px;border-radius:999px;font-size:10px;background:#252a36;color:#dbe4f5;margin-right:4px}.muted{color:var(--muted)}.empty{text-align:center;padding:28px 10px;color:var(--muted)}
+    dialog{border:none;border-radius:18px;background:#151820;color:white;width:min(720px,94vw);padding:0;box-shadow:0 30px 90px #000a}dialog::backdrop{background:#0009}.modal-head{padding:16px 18px;border-bottom:1px solid #2a303b;display:flex;justify-content:space-between;align-items:center}.modal-body{padding:16px 18px}.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}.form .wide{grid-column:1/-1}.form label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px}.bottomnav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,11,14,.95);backdrop-filter:blur(14px);border-top:1px solid #272c36;display:flex;justify-content:center;z-index:4}.bottomnav .inner{width:min(700px,100%);display:grid;grid-template-columns:repeat(4,1fr)}.navbtn{background:none;border:none;color:#abb3c2;padding:10px 3px 12px;font-size:11px}.navbtn b{display:block;color:white;font-size:17px;margin-bottom:2px}.notice{font-size:12px;line-height:1.45;background:#111722;border:1px solid #29364a;border-radius:12px;padding:11px;color:#c9d4e8}.right{text-align:right}.positive{color:var(--good)}.negative{color:var(--bad)}
+    @media(max-width:760px){.grid{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr 1fr}.event{grid-template-columns:1fr auto}.event>div:nth-child(2),.event>div:nth-child(3),.event>div:nth-child(4){grid-column:1/-1;display:flex;justify-content:space-between;border-top:1px solid #242a34;padding-top:7px}.event .actions{grid-column:1/-1;display:flex;gap:7px}.top{align-items:flex-start}.pill{display:none}.form{grid-template-columns:1fr}.form .wide{grid-column:auto}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="top"><div class="brand"><h1>🎟️ Ticket Edge</h1><p>Your private reseller command center.</p></div><div class="pill">Data stays on this device</div></header>
+
+  <section class="grid">
+    <div class="card metric"><div class="label">ACTIVE EVENTS</div><div class="value" id="mActive">0</div><div class="sub">watching / bought</div></div>
+    <div class="card metric"><div class="label">CAPITAL OUT</div><div class="value" id="mCapital">$0</div><div class="sub">unsold cost basis</div></div>
+    <div class="card metric"><div class="label">PROJECTED PROFIT</div><div class="value" id="mProj">$0</div><div class="sub">at target prices</div></div>
+    <div class="card metric"><div class="label">REALIZED PROFIT</div><div class="value" id="mReal">$0</div><div class="sub">completed sales</div></div>
+  </section>
+
+  <section class="card section">
+    <div class="toolbar">
+      <input id="search" class="search" placeholder="Search artist, team, city, venue…" />
+      <button class="btn primary" onclick="openEvent()">+ Add opportunity</button>
+      <button class="btn" onclick="openImport()">Import</button>
+    </div>
+    <div class="filters">
+      <select id="fStatus"><option value="">All statuses</option><option>Watching</option><option>Bought</option><option>Listed</option><option>Sold</option><option>Passed</option></select>
+      <select id="fType"><option value="">All types</option><option>Concert</option><option>Sports</option><option>Theater</option><option>Other</option></select>
+      <select id="fScore"><option value="">All scores</option><option value="70">70+ Buy zone</option><option value="50">50+ Watch</option></select>
+      <select id="fSort"><option value="date">Event date</option><option value="score">Score</option><option value="roi">Projected ROI</option><option value="onsale">On-sale time</option></select>
+      <button class="btn" onclick="exportCSV()">Export CSV</button>
+    </div>
+    <div class="list" id="eventList"></div>
+  </section>
+
+  <section class="card section">
+    <b>Buy Score</b>
+    <p class="muted" style="font-size:12px;line-height:1.45;margin-bottom:0">A transparent 0–100 score from your inputs: demand, scarcity, venue size, price cushion, market confidence, added-show risk, and timing. It is a decision aid—not a magic resale guarantee.</p>
+  </section>
+</div>
+
+<dialog id="eventDialog"><div class="modal-head"><b id="dlgTitle">Add opportunity</b><button class="btn small" onclick="eventDialog.close()">✕</button></div><div class="modal-body"><form class="form" id="eventForm" onsubmit="saveEvent(event)">
+  <input type="hidden" id="id" />
+  <div class="wide"><label>Event / artist / matchup</label><input id="name" required placeholder="e.g. Beyoncé — Chicago" /></div>
+  <div><label>Type</label><select id="type"><option>Concert</option><option>Sports</option><option>Theater</option><option>Other</option></select></div>
+  <div><label>Status</label><select id="status"><option>Watching</option><option>Bought</option><option>Listed</option><option>Sold</option><option>Passed</option></select></div>
+  <div><label>Venue</label><input id="venue" /></div><div><label>City</label><input id="city" /></div>
+  <div><label>Event date/time</label><input id="eventDate" type="datetime-local" /></div><div><label>On-sale date/time</label><input id="onsaleDate" type="datetime-local" /></div>
+  <div><label>Presale code</label><input id="presale" placeholder="optional" /></div><div><label>Buy link</label><input id="buyUrl" type="url" placeholder="https://…" /></div>
+  <div><label>Quantity</label><input id="qty" type="number" min="1" value="2" /></div><div><label>Total cost paid ($)</label><input id="cost" type="number" min="0" step=".01" value="0" /></div>
+  <div><label>Target gross sale TOTAL ($)</label><input id="target" type="number" min="0" step=".01" value="0" /></div><div><label>Marketplace fee %</label><input id="fee" type="number" min="0" max="100" step=".1" value="15" /></div>
+  <div><label>Actual gross sale TOTAL ($)</label><input id="sold" type="number" min="0" step=".01" value="0" /></div><div><label>Venue capacity</label><input id="capacity" type="number" min="0" value="0" /></div>
+  <div><label>Demand (1–10)</label><input id="demand" type="number" min="1" max="10" value="5" /></div><div><label>Scarcity / likely sellout (1–10)</label><input id="scarcity" type="number" min="1" max="10" value="5" /></div>
+  <div><label>Your confidence (1–10)</label><input id="confidence" type="number" min="1" max="10" value="5" /></div><div><label>Added-show risk (1 low–10 high)</label><input id="addRisk" type="number" min="1" max="10" value="5" /></div>
+  <div class="wide"><label>Notes / sections / comps</label><textarea id="notes" rows="3" placeholder="Sections, observed comps, inventory notes…"></textarea></div>
+  <div class="wide"><button class="btn primary" style="width:100%">Save opportunity</button></div>
+</form></div></dialog>
+
+<dialog id="importDialog"><div class="modal-head"><b>Import / backup</b><button class="btn small" onclick="importDialog.close()">✕</button></div><div class="modal-body">
+  <div class="notice">Paste a Ticket Edge JSON backup below. CSV export is intended for spreadsheets; JSON is the lossless backup/restore format.</div>
+  <textarea id="importText" style="width:100%;height:180px;margin-top:10px;background:#0f1116;color:white;border:1px solid #2b303a;border-radius:10px;padding:10px"></textarea>
+  <div class="toolbar" style="margin-top:10px"><button class="btn primary" onclick="importJSON()">Restore JSON</button><button class="btn" onclick="copyBackup()">Copy JSON backup</button><button class="btn danger" onclick="resetAll()">Erase all data</button></div>
+</div></dialog>
+
+<nav class="bottomnav"><div class="inner"><button class="navbtn" onclick="scrollTo(0,0)"><b>⌂</b>Dashboard</button><button class="navbtn" onclick="openEvent()"><b>＋</b>Add</button><button class="navbtn" onclick="focusSearch()"><b>⌕</b>Search</button><button class="navbtn" onclick="openImport()"><b>⇅</b>Backup</button></div></nav>
+
+<script>
+const KEY='ticketEdge.v1';
+let data=JSON.parse(localStorage.getItem(KEY)||'[]');
+const $=id=>document.getElementById(id);
+const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(Number(n)||0);
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function netGross(e,gross){return (Number(gross)||0)*(1-(Number(e.fee)||0)/100)}
+function projProfit(e){return netGross(e,e.target)-(Number(e.cost)||0)}
+function realProfit(e){return e.status==='Sold'?netGross(e,e.sold)-(Number(e.cost)||0):0}
+function roi(e){let c=Number(e.cost)||0; return c?projProfit(e)/c*100:0}
+function score(e){
+  const d=(Number(e.demand)||5)*3.0, s=(Number(e.scarcity)||5)*2.7, c=(Number(e.confidence)||5)*1.8;
+  const risk=(11-(Number(e.addRisk)||5))*1.4;
+  const r=Math.max(-50,Math.min(150,roi(e)));
+  const roiPts=Math.max(0,Math.min(18,(r+10)/160*18));
+  const cap=Number(e.capacity)||0; const capPts=cap?Math.max(0,7-Math.log10(Math.max(cap,500)/500)*2.7):3;
+  return Math.max(0,Math.min(100,Math.round(d+s+c+risk+roiPts+capPts-9)));
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+function openEvent(id){
+  $('eventForm').reset(); $('qty').value=2;$('fee').value=15;$('demand').value=5;$('scarcity').value=5;$('confidence').value=5;$('addRisk').value=5;$('cost').value=0;$('target').value=0;$('sold').value=0;$('capacity').value=0;
+  $('id').value='';$('dlgTitle').textContent='Add opportunity';
+  if(id){const e=data.find(x=>x.id===id);if(!e)return;$('dlgTitle').textContent='Edit opportunity';Object.keys(e).forEach(k=>{if($(k))$(k).value=e[k]??''})}
+  eventDialog.showModal();
+}
+function saveEvent(ev){ev.preventDefault();const fields=['name','type','status','venue','city','eventDate','onsaleDate','presale','buyUrl','qty','cost','target','fee','sold','capacity','demand','scarcity','confidence','addRisk','notes'];const obj={id:$('id').value||crypto.randomUUID(),createdAt:new Date().toISOString()};fields.forEach(f=>obj[f]=$(f).value);const i=data.findIndex(x=>x.id===obj.id);if(i>=0)obj.createdAt=data[i].createdAt,data[i]=obj;else data.unshift(obj);save();eventDialog.close()}
+function removeEvent(id){if(confirm('Delete this opportunity?')){data=data.filter(e=>e.id!==id);save()}}
+function copyCode(code){navigator.clipboard.writeText(code||'');alert('Presale code copied.')}
+function render(){
+ const q=$('search').value.toLowerCase(),fs=$('fStatus').value,ft=$('fType').value,min=+$('fScore').value||0,sort=$('fSort').value;
+ let rows=data.filter(e=>(!q||[e.name,e.venue,e.city,e.notes].join(' ').toLowerCase().includes(q))&&(!fs||e.status===fs)&&(!ft||e.type===ft)&&score(e)>=min);
+ rows.sort((a,b)=>sort==='score'?score(b)-score(a):sort==='roi'?roi(b)-roi(a):sort==='onsale'?String(a.onsaleDate).localeCompare(String(b.onsaleDate)):String(a.eventDate).localeCompare(String(b.eventDate)));
+ $('eventList').innerHTML=rows.length?rows.map(e=>{let sc=score(e),cls=sc>=70?'hot':sc>=50?'mid':'cold',pp=projProfit(e),rp=realProfit(e);return `<article class="event"><div><h3>${esc(e.name)}</h3><div class="meta">${esc(e.city||'')} ${e.venue?'• '+esc(e.venue):''}</div><div style="margin-top:6px"><span class="tag">${esc(e.type)}</span><span class="tag">${esc(e.status)}</span>${e.presale?`<button class="btn small" onclick="copyCode('${esc(e.presale)}')">Code: ${esc(e.presale)}</button>`:''}</div></div><div class="num"><span class="muted">Event</span><span>${e.eventDate?new Date(e.eventDate).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'—'}</span></div><div class="num"><span class="muted">Projected</span><span class="${pp>=0?'positive':'negative'}">${money(pp)} · ${roi(e).toFixed(0)}%</span></div><div class="num"><span class="muted">Realized</span><span class="${rp>=0?'positive':'negative'}">${e.status==='Sold'?money(rp):'—'}</span></div><div><div class="score ${cls}">${sc}</div></div><div class="actions"><button class="btn small" onclick="openEvent('${e.id}')">Edit</button>${e.buyUrl?`<button class="btn small good" onclick="window.open('${esc(e.buyUrl)}','_blank')">Buy</button>`:''}<button class="btn small danger" onclick="removeEvent('${e.id}')">Delete</button></div></article>`}).join(''):'<div class="empty">No opportunities yet. Add one and make this thing earn its keep.</div>';
+ const active=data.filter(e=>!['Sold','Passed'].includes(e.status)); $('mActive').textContent=active.length;$('mCapital').textContent=money(data.filter(e=>['Bought','Listed'].includes(e.status)).reduce((s,e)=>s+(+e.cost||0),0));$('mProj').textContent=money(data.filter(e=>!['Sold','Passed'].includes(e.status)).reduce((s,e)=>s+projProfit(e),0));$('mReal').textContent=money(data.reduce((s,e)=>s+realProfit(e),0));
+}
+function openImport(){importDialog.showModal()}
+function copyBackup(){navigator.clipboard.writeText(JSON.stringify(data,null,2));alert('Backup copied to clipboard.')}
+function importJSON(){try{const x=JSON.parse($('importText').value);if(!Array.isArray(x))throw Error();data=x;save();importDialog.close();alert('Backup restored.')}catch{alert('That does not look like a valid Ticket Edge JSON backup.')}}
+function resetAll(){if(confirm('Erase ALL Ticket Edge data on this device?')){data=[];save();importDialog.close()}}
+function exportCSV(){const cols=['name','type','status','venue','city','eventDate','onsaleDate','presale','qty','cost','target','fee','sold','capacity','demand','scarcity','confidence','addRisk','notes'];const lines=[cols.concat(['score','projectedProfit','projectedROI','realizedProfit']).join(',')];data.forEach(e=>{let row=cols.map(k=>'"'+String(e[k]??'').replaceAll('"','""')+'"');row.push(score(e),projProfit(e).toFixed(2),roi(e).toFixed(1),realProfit(e).toFixed(2));lines.push(row.join(','))});const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'}));a.download='ticket-edge-export.csv';a.click();URL.revokeObjectURL(a.href)}
+function focusSearch(){$('search').focus();$('search').scrollIntoView({behavior:'smooth',block:'center'})}
+['search','fStatus','fType','fScore','fSort'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',render));
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+render();
+</script>
+</body></html>
