@@ -1,0 +1,1672 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090a0d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ticket Edge" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./ticket-edge-logo.png?v=4" />
+  <link rel="icon" type="image/png" href="./ticket-edge-logo.png?v=4" />
+  <title>Ticket Edge — Build 6.7.2</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.min.mjs" type="module"></script>
+  <style>
+    :root {
+      --bg:#08090d; --panel:#12151b; --line:#282e3a; --text:#f5f7fb; --muted:#9da7b8;
+      --green:#68e3a3; --gold:#f7c34a; --red:#ff7777;
+    }
+    *{box-sizing:border-box}
+    [hidden]{display:none !important}
+    body{margin:0;background:linear-gradient(180deg,#090a0d,#0d1118 60%,#08090d);color:var(--text);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+    button,input{font:inherit} .app{max-width:980px;margin:auto;padding:14px 13px 90px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .brand{display:flex;align-items:center;gap:10px} .brand img{width:48px;height:48px;border-radius:12px;object-fit:cover}
+    h1{font-size:22px;margin:0} .subtitle{font-size:12px;color:var(--muted);margin-top:2px}
+    .btn{border:1px solid #323947;background:#1a1f29;color:white;border-radius:11px;padding:10px 12px;cursor:pointer}
+    .btn.primary{background:linear-gradient(135deg,#7a65ff,#9d6df7);border:0;font-weight:750}
+    .btn.good{background:#123c29;border-color:#286746;color:#bdf6d6} .btn.ghost{background:transparent} .btn.small{padding:7px 9px;font-size:12px}
+    .btn.refreshInv{background:#1f4f8f;border-color:#3d79c7;color:#f4f8ff;font-weight:800;min-width:166px;transition:background .18s,border-color .18s,transform .12s,opacity .18s}
+    .btn.refreshInv:active{transform:scale(.98)}
+    .btn.refreshInv.working{background:#6b4acb;border-color:#9275ed;color:#fff;cursor:wait}
+    .btn.refreshInv.success{background:#146b43;border-color:#2f9b68;color:#eafff3}
+    .btn.refreshInv.errorState{background:#7b242c;border-color:#b44a55;color:#fff0f1}
+    .btn.refreshInv:disabled{opacity:1}
+    .spin{display:inline-block;animation:teSpin .8s linear infinite}
+    @keyframes teSpin{to{transform:rotate(360deg)}}
+    .statusbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+    .chip{font-size:11px;padding:6px 8px;border-radius:999px;background:#171c25;border:1px solid #2b3340;color:#ccd5e4}
+    .chip.live{color:#c6f9dc;border-color:#255c41;background:#102d20}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px} .card{background:rgba(18,21,27,.95);border:1px solid var(--line);border-radius:16px;padding:13px}
+    .metric .label{font-size:11px;color:var(--muted)} .metric .value{font-size:23px;font-weight:800;margin-top:4px} .section{margin-top:11px}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center} .search{flex:1;min-width:180px;background:#0e1117;border:1px solid #29303b;color:white;border-radius:11px;padding:10px 12px}
+    .tabs{display:flex;gap:7px;overflow:auto;margin-top:10px;padding-bottom:2px} .tab{white-space:nowrap;border:1px solid #2b3240;background:#151922;color:#cbd3df;border-radius:999px;padding:8px 10px;font-size:12px}
+    .tab.active{background:#252c39;color:white} .list{display:grid;gap:10px;margin-top:11px} .event{background:#11151c;border:1px solid #252c37;border-radius:16px;padding:13px}
+    .eventTop{display:flex;gap:11px;align-items:flex-start;justify-content:space-between} .headline{min-width:0;flex:1} .headline h3{font-size:16px;margin:0 0 3px}
+    .meta{font-size:12px;color:var(--muted)} .tags{margin-top:7px;display:flex;gap:5px;flex-wrap:wrap} .tag{font-size:10px;padding:4px 7px;border-radius:999px;background:#242b37;color:#dce5f5}
+    .tag.gem{background:#362d12;color:#ffe18a;border:1px solid #69591e} .rec{min-width:86px;text-align:center;border-radius:12px;padding:9px 8px;font-weight:850;font-size:12px}
+    .rec.BUY{background:#123524;color:#84efb4} .rec.REGISTER{background:#352910;color:#ffd778} .rec.WATCH{background:#2b2a18;color:#f3dd79} .rec.PASS{background:#391a1e;color:#ff9da5}
+    .score{display:block;font-size:20px;margin-top:2px} .intel{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:11px}
+    .intel div{background:#0d1117;border:1px solid #222936;border-radius:10px;padding:8px} .intel span{display:block;font-size:10px;color:var(--muted)} .intel b{font-size:13px}
+    .why{margin-top:10px;font-size:12px;line-height:1.45;color:#d5dceb;background:#0c121a;border-left:3px solid #596a89;padding:9px 10px;border-radius:8px}
+    .change{margin-top:8px;font-size:12px;line-height:1.4;background:#19141b;border:1px solid #39273c;border-radius:10px;padding:9px} .change b{color:#e9c5ff}
+    .actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px} .prep{margin-top:11px;padding:11px;border:1px solid #704f18;background:#251c0b;border-radius:12px}.prep strong{color:#ffd778}.priority{display:inline-block;margin-right:6px;font-size:10px;font-weight:900;padding:4px 7px;border-radius:999px;background:#6a261e;color:#ffd0c8}.countdown{font-weight:850;color:#ffd778}.rulebox{margin-top:11px;background:#0e131b;border:1px solid #293342;border-radius:14px;padding:12px}.rulebox h2{font-size:14px;margin:0 0 6px}.rulebox p{font-size:11px;color:#aeb8c8;line-height:1.45;margin:0} .empty{text-align:center;color:var(--muted);padding:30px 10px}
+    .accessbar{margin-top:11px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}.accesslabel{font-size:11px;color:var(--muted);font-weight:800}.accesscard{font-size:11px;font-weight:850;padding:6px 9px;border-radius:999px;background:#111a29;border:1px solid #314260;color:#dbe8ff}.accesscard.eligible{background:#102d20;border-color:#285c42;color:#c6f9dc}
+    .gate{margin-top:8px;border-radius:10px;padding:9px 10px;font-size:11px;line-height:1.4}.gate.ok{background:#0f281d;border:1px solid #285c42;color:#c9f7dc}.gate.warn{background:#2a210f;border:1px solid #6e571d;color:#ffe2a0}.gate.block{background:#32171b;border:1px solid #703039;color:#ffb0b7}
+    .importGrid{display:grid;grid-template-columns:1.2fr .8fr;gap:10px;margin-top:10px}.importGrid textarea{width:100%;min-height:210px;background:#0d1117;color:white;border:1px solid #29313d;border-radius:12px;padding:11px;resize:vertical}.extract{background:#0d1117;border:1px solid #29313d;border-radius:12px;padding:11px}.extract h3{font-size:13px;margin:0 0 8px}.extract dl{margin:0}.extract dt{font-size:10px;color:var(--muted);margin-top:8px}.extract dd{margin:2px 0 0;font-size:12px;color:#e7edf7;word-break:break-word}.miniNote{font-size:10px;color:#909bad;line-height:1.4;margin-top:8px}
+    @media(max-width:720px){.importGrid{grid-template-columns:1fr}}
+    .loginWrap{min-height:100vh;display:grid;place-items:center;padding:20px} .login{width:min(430px,100%);background:#11151c;border:1px solid #29303b;border-radius:20px;padding:20px}
+    .loginLogo{display:block;width:92px;height:92px;border-radius:22px;object-fit:cover;margin:0 auto 14px} .login h2{text-align:center;margin:0 0 5px}
+    .login p{text-align:center;color:var(--muted);font-size:13px;margin:0 0 16px} .login input{width:100%;background:#0d1117;border:1px solid #29313d;color:white;border-radius:11px;padding:12px;margin-bottom:9px}
+    .login .btn{width:100%} .error{color:#ff9ba4;font-size:12px;margin-top:10px;text-align:center} .loading{padding:30px;text-align:center;color:var(--muted)}
+    .inventoryMetrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.inventoryMetrics>div{background:#0d1117;border:1px solid #222936;border-radius:11px;padding:9px}.inventoryMetrics span{display:block;font-size:10px;color:var(--muted)}.inventoryMetrics b{display:block;font-size:17px;margin-top:3px}.invGroup{margin-top:10px;background:#0d1117;border:1px solid #29313d;border-radius:14px;padding:12px}.invHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.invTitle{font-weight:850}.invSub{font-size:11px;color:var(--muted);margin-top:3px}.ticketUnits{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.unit{font-size:10px;border:1px solid #334052;border-radius:9px;padding:6px 7px;background:#151b24}.unit.reserved{border-color:#6e571d;background:#2a210f;color:#ffe2a0}.unit.listed{border-color:#285c42;background:#0f281d;color:#c9f7dc}.unit.sale_pending{border-color:#8b3039;background:#39171c;color:#ffb0b7}.unit.sold,.unit.transferred{opacity:.65}.modeSafe{font-size:10px;font-weight:900;padding:5px 7px;border-radius:999px;background:#102d20;border:1px solid #285c42;color:#c6f9dc}.oversell{margin-top:9px;padding:9px;border-radius:10px;background:#111722;border:1px solid #2d394a;font-size:11px;line-height:1.45}.delist{margin-top:9px;padding:11px;border-radius:10px;background:#401419;border:2px solid #ff7777;color:#ffd7da;font-weight:900}.sellerWait{margin-top:9px;padding:9px;border-radius:10px;background:#251c0b;border:1px solid #704f18;color:#ffe2a0;font-size:11px}.strategyBox{margin-top:9px;padding:10px;border-radius:12px;background:#0f151d;border:1px solid #334052}.strategyTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.strategyVerdict{font-size:12px;font-weight:950;letter-spacing:.2px}.strategyVerdict.hold{color:#ffe08a}.strategyVerdict.max{color:#bdf6d6}.strategyGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}.strategyGrid>div{background:#0b1016;border:1px solid #26303d;border-radius:9px;padding:8px}.strategyGrid span{display:block;font-size:9px;color:var(--muted);text-transform:uppercase}.strategyGrid b{display:block;font-size:12px;margin-top:3px}.strategyWhy{margin-top:9px;font-size:10.5px;line-height:1.45;color:#cfd8e7}.compStrip{margin-top:8px;padding:8px;border-radius:9px;background:#111722;border:1px solid #2d394a;font-size:10px;line-height:1.45;color:#aeb8c8}.compStrip b{color:#e7edf7}.inventoryEmpty{text-align:center;color:var(--muted);padding:22px 8px}.invDiag{margin-top:9px;padding:9px 10px;border-radius:10px;background:#0c121a;border:1px solid #293342;font-size:10px;line-height:1.45;color:#aeb8c8}.invDiag .ok{color:#bdf6d6}.invDiag .warn{color:#ffe2a0}.invDiag .bad{color:#ffb0b7}
+    @media(max-width:720px){.grid{grid-template-columns:1fr 1fr}.intel{grid-template-columns:1fr 1fr}.inventoryMetrics{grid-template-columns:1fr 1fr}.strategyGrid{grid-template-columns:1fr 1fr}.top{align-items:flex-start}.brand img{width:44px;height:44px}}
+
+    .decisionGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+    .decisionGrid label{display:block;font-size:10px;color:var(--muted);font-weight:800;margin-bottom:5px}
+    .decisionGrid input,.decisionGrid select{width:100%;background:#0d1117;border:1px solid #29313d;color:white;border-radius:10px;padding:10px}
+    .decisionGrid .wide{grid-column:span 2}
+    .decisionResult{margin-top:11px;border:1px solid #303a4a;background:#0d121a;border-radius:14px;padding:12px}
+    .decisionVerdict{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .verdictBadge{font-size:16px;font-weight:950;padding:9px 12px;border-radius:12px}
+    .verdictBadge.BUY{background:#123c29;color:#bdf6d6;border:1px solid #286746}
+    .verdictBadge.HOLD{background:#352910;color:#ffd778;border:1px solid #6e571d}
+    .verdictBadge.WALK{background:#391a1e;color:#ffadb5;border:1px solid #703039}
+    .decisionMetrics{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}
+    .decisionMetrics>div{background:#0a0f16;border:1px solid #242d3b;border-radius:10px;padding:9px}
+    .decisionMetrics span{display:block;font-size:9px;color:var(--muted);font-weight:800}
+    .decisionMetrics b{display:block;font-size:13px;margin-top:3px}
+    .scenarioTable{width:100%;border-collapse:collapse;margin-top:10px;font-size:11px}
+    .scenarioTable th,.scenarioTable td{padding:8px;border-bottom:1px solid #25303d;text-align:right}
+    .scenarioTable th:first-child,.scenarioTable td:first-child{text-align:left}
+    .scenarioTable th{color:#9da7b8;font-size:9px}
+    .decisionWhy{margin-top:10px;font-size:11px;line-height:1.5;color:#d7dfec}
+    .decisionWarn{margin-top:8px;padding:8px 10px;border-radius:9px;background:#2a210f;border:1px solid #6e571d;color:#ffe2a0;font-size:10px;line-height:1.4}
+    @media(max-width:720px){.decisionGrid{grid-template-columns:1fr 1fr}.decisionGrid .wide{grid-column:span 2}.decisionMetrics{grid-template-columns:1fr 1fr}}
+
+
+    .shotBar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+    .shotInput{position:absolute;left:-9999px}
+    .shotPreview{margin-top:10px;display:grid;grid-template-columns:180px 1fr;gap:10px;align-items:start}
+    .shotPreview img{width:100%;max-height:220px;object-fit:contain;border:1px solid #2a3442;border-radius:12px;background:#090d13}
+    .ocrBox{background:#0d1117;border:1px solid #29313d;border-radius:12px;padding:10px;min-height:120px}
+    .ocrStatus{font-size:11px;color:#aeb8c8;line-height:1.4}
+    .ocrText{white-space:pre-wrap;font-size:10px;color:#cbd5e4;max-height:190px;overflow:auto;margin-top:7px}
+    .ocrGood{color:#bdf6d6}.ocrWarn{color:#ffe2a0}.ocrBad{color:#ffadb5}
+    @media(max-width:720px){.shotPreview{grid-template-columns:1fr}}
+
+
+    .intakeRoute{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:900;padding:5px 8px;border-radius:999px;margin-left:6px}
+    .intakeRoute.cart{background:#102d20;border:1px solid #285c42;color:#c6f9dc}
+    .intakeRoute.confirm{background:#2a210f;border:1px solid #6e571d;color:#ffe2a0}
+    .intakeRoute.unknown{background:#171c25;border:1px solid #2b3340;color:#ccd5e4}
+    .routeBox{margin-top:8px;padding:9px 10px;border-radius:10px;background:#0b1017;border:1px solid #26313f;font-size:10px;color:#aeb8c8;line-height:1.45}
+
+
+    .confirmPanel{margin-top:12px;border:1px solid #2d3745;background:#0c1118;border-radius:14px;padding:12px}
+    .confirmPanel[hidden]{display:none!important}
+    .confirmHeader{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .confirmHeader h3{margin:0;font-size:15px}
+    .routePill{font-size:10px;font-weight:900;padding:5px 8px;border-radius:999px;background:#2a210f;border:1px solid #6e571d;color:#ffe2a0}
+    .confirmGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+    .confirmGrid label{display:block;font-size:9px;color:var(--muted);font-weight:800;margin-bottom:4px}
+    .confirmGrid input{width:100%;background:#0a0f16;border:1px solid #283240;color:white;border-radius:9px;padding:9px}
+    .confirmGrid .wide{grid-column:span 2}
+    .confirmActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .debugDetails{margin-top:8px}
+    .debugDetails summary{cursor:pointer;color:#9fb5ff;font-size:10px;font-weight:800}
+    .debugDetails pre{white-space:pre-wrap;max-height:220px;overflow:auto;background:#090d13;border:1px solid #26313f;border-radius:10px;padding:9px;color:#b7c3d5;font-size:9px;line-height:1.35}
+    .intakeMessage{margin-top:8px;font-size:10px;line-height:1.45;color:#aeb8c8}
+    .modeHidden{display:none!important}
+    @media(max-width:720px){.confirmGrid{grid-template-columns:1fr 1fr}.confirmGrid .wide{grid-column:span 2}}
+
+    .fieldState{font-size:9px;margin-top:4px}
+    .fieldState.good{color:#bdf6d6}
+    .fieldState.warn{color:#ffe2a0}
+    .fieldState.bad{color:#ffadb5}
+    .confirmSummary{margin-top:10px;padding:9px 10px;border-radius:10px;background:#0b1017;border:1px solid #26313f;font-size:10px;line-height:1.45;color:#aeb8c8}
+
+    .oppReadiness{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+    .readyPill{font-size:10px;font-weight:900;padding:5px 8px;border-radius:999px;border:1px solid #2d3745;background:#111823;color:#d9e2ef}
+    .readyPill.good{background:#102d20;border-color:#285c42;color:#c6f9dc}
+    .readyPill.warn{background:#2a210f;border-color:#6e571d;color:#ffe2a0}
+    .readyPill.bad{background:#35191d;border-color:#6f3038;color:#ffb8bf}
+    .sourceStatus{margin-top:8px;font-size:10px;color:#9facbd}
+    .oppEmptyCTA{margin-top:10px;padding:10px;border:1px dashed #344052;border-radius:10px;color:#b7c3d5;font-size:11px}
+
+  </style>
+<script type="module">
+      import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.min.mjs';
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs';
+      window.pdfjsLib = pdfjsLib;
+    </script>
+</head>
+<body>
+  <div id="loginScreen" class="loginWrap">
+    <div class="login">
+      <img src="./ticket-edge-logo.png?v=4" class="loginLogo" alt="Ticket Edge">
+      <h2>Ticket Edge</h2>
+      <p>Your private resale intelligence desk.</p>
+      <input id="email" type="email" autocomplete="email" placeholder="Email">
+      <input id="password" type="password" autocomplete="current-password" placeholder="Password">
+      <button class="btn primary" onclick="signIn()">Sign in</button>
+      <div id="loginError" class="error"></div>
+    </div>
+  </div>
+
+  <div id="mainApp" class="app" hidden>
+    <header class="top">
+      <div class="brand">
+        <img src="./ticket-edge-logo.png?v=4" alt="">
+        <div><h1>Ticket Edge</h1><div class="subtitle">Actionable resale intelligence, not hype.</div></div>
+      </div>
+      <button class="btn small ghost" onclick="signOut()">Sign out</button>
+    </header>
+
+    <div class="statusbar">
+      <span class="chip live">● AUTHENTICATED</span>
+      <span class="chip" id="authUser">Signed in: —</span>
+      <span class="chip" id="lastUpdated">Last updated: —</span><span class="chip" id="oppFeedStatus">Real feed: checking…</span>
+      <span class="chip">Build 6.7.2 • Live Opportunity Feed + Decision Readiness</span>
+    </div>
+
+    <section class="grid">
+      <div class="card metric"><div class="label">BUY NOW</div><div class="value" id="mBuy">0</div></div>
+      <div class="card metric"><div class="label">REGISTER</div><div class="value" id="mRegister">0</div></div>
+      <div class="card metric"><div class="label">WATCH</div><div class="value" id="mWatch">0</div></div>
+      <div class="card metric"><div class="label">HIDDEN GEMS</div><div class="value" id="mGem">0</div></div>
+    </section>
+
+    <section class="rulebox">
+      <h2>🔥 A-TIER PRE-DROP STANDARD</h2>
+      <p>Ticket Edge now escalates high-confidence drops before sale time: PREP TONIGHT → exact access time → registration status → target inventory → preliminary ceiling → cart/comp decision. Simultaneous drops are ranked so one gets your primary attention. Added-show dilution, ticket differentiation, net seller payout, ROI, and capital velocity are part of the decision standard.</p>
+    </section>
+
+    <section class="rulebox">
+      <h2>💳 ACCESS WALLET + ELIGIBILITY GATE</h2>
+      <p>Card access is an advantage, not a buy signal. Ticket Edge should surface eligible cardholder presales, then still require the same demand, scarcity, net-payout, ROI and transferability checks before capital is committed.</p>
+      <div class="accessbar">
+        <span class="accesslabel">AVAILABLE:</span>
+        <span class="accesscard">AMERICAN EXPRESS</span>
+        <span class="accesscard">CITI</span>
+        <span class="accesscard">VISA</span>
+      </div>
+    </section>
+
+
+    <section class="card section" id="liveDecisionSection">
+      <div class="toolbar">
+        <div style="flex:1;min-width:240px">
+          <div style="font-weight:900;font-size:16px">⚡ LIVE DROP DECISION MODE</div>
+          <div class="miniNote">Timer-safe cart math with screenshot intake. Choose an existing screenshot from Photos/Files; Ticket Edge detects CART/CHECKOUT vs PURCHASE CONFIRMATION and pre-fills supported fields. BUY / HOLD / WALK still uses net payout, net-dollar profit, ROI, bankroll deployment, hold time, transferability, dilution and differentiation. Nothing invents market value—you supply the comps.</div>
+        </div>
+        <button class="btn primary" id="decisionBtn" onclick="analyzeLiveCart()">Analyze Cart</button>
+        <button class="btn" onclick="clearLiveCart()">Clear</button>
+      </div>
+
+
+      <div class="shotBar">
+        <input id="cartScreenshot" class="shotInput" type="file" accept=".png,.jpg,.jpeg,.webp,.pdf,image/png,image/jpeg,image/webp,application/pdf" onchange="handleCartScreenshot(event)">
+        <button class="btn good" onclick="$('cartScreenshot').click()">🖼️ Choose Screenshot or PDF</button>
+        <button class="btn" onclick="clearCartScreenshot()">Remove Screenshot</button>
+        <span class="miniNote">Choose an existing screenshot or Ticketmaster PDF from Photos or Files. Ticket Edge reads it locally, detects whether it looks like a CART/CHECKOUT or a PURCHASE CONFIRMATION, fills only what it can support, and never guesses missing fields.</span>
+      </div>
+
+      <div id="shotPreview" class="shotPreview" hidden>
+        <img id="shotImage" alt="Ticket screenshot preview">
+        <div class="ocrBox">
+          <div id="ocrStatus" class="ocrStatus">Choose an existing screenshot or PDF from Photos or Files.</div>
+          <div id="intakeRouteBox" class="routeBox">INTAKE ROUTE: <span id="intakeRoute" class="intakeRoute unknown">NOT YET DETECTED</span></div>
+          <div id="intakeMessage" class="intakeMessage">Ticket Edge will route carts to Live Drop Decision Mode and confirmations to Purchase / Inventory Intake.</div>
+          <details class="debugDetails">
+            <summary>View extracted text</summary>
+            <pre id="ocrText"></pre>
+          </details>
+        </div>
+      </div>
+
+      
+      <div id="purchaseConfirmPanel" class="confirmPanel" hidden>
+        <div class="confirmHeader">
+          <div>
+            <h3>🎟️ Purchase / Inventory Intake</h3>
+            <div class="miniNote">Review what Ticket Edge extracted. Confirmation files belong here, not in pre-buy analysis.</div>
+          </div>
+          <span class="routePill">PURCHASE CONFIRMATION</span>
+        </div>
+
+        <div class="confirmGrid">
+          <div class="wide"><label>ARTIST / EVENT</label><input id="pcEvent" placeholder="Artist / event"><div id="pcEventState" class="fieldState warn">Not found — review</div></div>
+          <div><label>QUANTITY</label><input id="pcQty" type="number" min="1"><div id="pcQtyState" class="fieldState warn">Not found — review</div></div>
+          <div><label>TOTAL PAID</label><input id="pcTotal" type="number" min="0" step="0.01"><div id="pcTotalState" class="fieldState warn">Not found — review</div></div>
+          <div class="wide"><label>VENUE / MARKET</label><input id="pcVenue" placeholder="Venue / city"><div id="pcVenueState" class="fieldState warn">Not found — review</div></div>
+          <div><label>EVENT DATE / TIME</label><input id="pcDate" placeholder="Date / time"><div id="pcDateState" class="fieldState warn">Not found — review</div></div>
+          <div><label>ORDER NUMBER</label><input id="pcOrder" placeholder="Order #"><div id="pcOrderState" class="fieldState warn">Not found — review</div></div>
+          <div><label>SECTION</label><input id="pcSection"><div id="pcSectionState" class="fieldState warn">Not found — review</div></div>
+          <div><label>ROW</label><input id="pcRow"><div id="pcRowState" class="fieldState warn">Not found — review</div></div>
+          <div><label>SEATS</label><input id="pcSeats"><div id="pcSeatsState" class="fieldState warn">Not found — review</div></div>
+          <div><label>SOURCE</label><input id="pcSource" value="Ticketmaster" readonly></div>
+        </div>
+
+        <div class="confirmActions">
+          <button class="btn primary" onclick="savePurchaseDraft()">Save Purchase Draft</button>
+          <button class="btn" onclick="matchExistingPurchase()">Match Existing Purchase</button>
+          <button class="btn" onclick="switchToLiveCart()">Use as Live Cart Instead</button>
+        </div>
+        <div id="confirmSummary" class="confirmSummary">No confirmation parsed yet.</div>
+<div id="purchaseSaveStatus" class="miniNote"></div>
+      </div>
+
+<div class="decisionGrid" id="liveCartFields">
+        <div class="wide"><label>EVENT / MARKET</label><input id="dEvent" placeholder="Artist — City / Venue"></div>
+        <div><label>QUANTITY</label><input id="dQty" type="number" min="1" value="2"></div>
+        <div><label>ALL-IN CART TOTAL</label><input id="dCart" type="number" min="0" step="0.01" placeholder="178.00"></div>
+
+        <div><label>AVAILABLE BANKROLL</label><input id="dBankroll" type="number" min="0" step="0.01" placeholder="550.00"></div>
+        <div><label>SELLER FEE %</label><input id="dFee" type="number" min="0" max="50" step="0.1" value="10"></div>
+        <div><label>EXPECTED HOLD (MONTHS)</label><input id="dHold" type="number" min="0" step="0.5" value="2"></div>
+        <div><label>TRANSFER / RESALE</label>
+          <select id="dTransfer">
+            <option value="verified">Verified / transferable</option>
+            <option value="unverified" selected>Not yet verified</option>
+            <option value="blocked">Blocked / non-transferable</option>
+          </select>
+        </div>
+
+        <div><label>CONSERVATIVE RESALE / TICKET</label><input id="dCons" type="number" min="0" step="0.01" placeholder="120"></div>
+        <div><label>BASE RESALE / TICKET</label><input id="dBase" type="number" min="0" step="0.01" placeholder="160"></div>
+        <div><label>UPSIDE RESALE / TICKET</label><input id="dUp" type="number" min="0" step="0.01" placeholder="220"></div>
+        <div><label>SCARCITY (1–10)</label><input id="dScarcity" type="number" min="1" max="10" value="6"></div>
+
+        <div><label>DIFFERENTIATION (1–10)</label><input id="dDiff" type="number" min="1" max="10" value="5"></div>
+        <div><label>DILUTION RISK (1–10)</label><input id="dDilution" type="number" min="1" max="10" value="4"></div>
+        <div class="wide"><label>LIVE NOTE / COMP EVIDENCE</label><input id="dNote" placeholder="e.g. Row 1 pair; only 3 comparable listings; added date risk low"></div>
+      </div>
+
+      <div id="decisionResult" class="decisionResult">
+        <div class="empty" style="padding:12px">Enter the cart + realistic comps, then tap Analyze Cart.</div>
+      </div>
+    </section>
+
+    <section class="card section" id="inventorySection">
+      <div class="toolbar">
+        <div style="flex:1;min-width:220px">
+          <div style="font-weight:850">🎟️ MY INVENTORY • OVERSELL GUARD</div>
+          <div class="miniNote">A listing is not inventory. A ticket is inventory. SAFE MODE is the default until dependable marketplace synchronization is enabled. Build 6.4.1 automatically retries transient JWT timing errors instead of dropping purchase metadata. Seller Strategy now reads dated market snapshots from Supabase when available.</div>
+        </div>
+        <button id="refreshInventoryBtn" class="btn refreshInv" onclick="loadInventory()">↻ Refresh Inventory</button>
+      </div>
+      <div class="inventoryMetrics">
+        <div><span>DEPLOYED CAPITAL</span><b id="invCapital">—</b></div>
+        <div><span>OWNED TICKETS</span><b id="invOwned">—</b></div>
+        <div><span>MARKET EXPOSED</span><b id="invExposed">—</b></div>
+        <div><span>MAX SELLABLE</span><b id="invSellable">—</b></div>
+      </div>
+      <div id="inventoryList"><div class="loading">Loading real inventory…</div></div>
+      <div id="inventoryDiag" class="invDiag">Inventory sources: waiting for authenticated read…</div>
+    </section>
+
+    <section class="card section">
+      <div class="toolbar">
+        <div style="flex:1;min-width:220px">
+          <div style="font-weight:850">📥 Presale Inbox / Confirmation Import</div>
+          <div class="miniNote">Paste a presale confirmation email here. Ticket Edge will extract the drop details needed to prepare. This beta parser works locally in the browser; later the scanner/backend can attach the import directly to the matching Supabase opportunity.</div>
+        </div>
+        <button class="btn primary" onclick="extractPresaleEmail()">Extract Details</button>
+        <button class="btn" onclick="clearPresaleImport()">Clear</button>
+      </div>
+      <div class="importGrid">
+        <textarea id="presaleEmailText" placeholder="Paste the full confirmation email here…"></textarea>
+        <div class="extract" id="presaleExtract">
+          <h3>Extracted Drop Prep</h3>
+          <div class="empty" style="padding:18px 4px">Paste an email and tap Extract Details.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card section">
+      <div class="toolbar">
+        <input id="search" class="search" placeholder="Search artist, city, venue…" oninput="render()">
+        <button class="btn primary" onclick="loadAll()">↻ Refresh Intel</button>
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="setFilter('ALL',this)">All Active</button>
+        <button class="tab" onclick="setFilter('BUY',this)">🔥 Buy</button>
+        <button class="tab" onclick="setFilter('REGISTER',this)">📝 Register</button>
+        <button class="tab" onclick="setFilter('WATCH',this)">👀 Watch</button>
+        <button class="tab" onclick="setFilter('PASS',this)">Pass</button>
+      </div>
+      <div id="eventList" class="list"><div class="loading">Loading Ticket Edge intelligence…</div></div>
+    </section>
+  </div>
+
+<script>
+const SUPABASE_URL = 'https://stbvvdcehpmubralmfvt.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_FmOFrr76xUZ7snH4zs9bQw_O9OyfBr0';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+let opportunities = [], changes = [], presales = [], purchases = [], ticketInventory = [], ticketListings = [], marketSnapshots = [], activeFilter = 'ALL';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const money = n => n == null ? '—' : new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(Number(n));
+const fmtDate = s => s ? new Date(s).toLocaleString([],{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
+const fmtEventDate = p => {
+  if(!p?.event_date) return '—';
+  const opts={month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'};
+  if(p.event_timezone) opts.timeZone=p.event_timezone;
+  try{return new Intl.DateTimeFormat('en-US',opts).format(new Date(p.event_date));}
+  catch(_){return fmtDate(p.event_date);}
+};
+const hoursUntil = s => s ? (new Date(s).getTime()-Date.now())/36e5 : Infinity;
+const prepTier = (o,p) => { const h=hoursUntil(p?.presale_start); const strong=(o.score??0)>=80 || o.recommendation==='BUY'; if(h>=0&&h<=36&&strong)return 'A-TIER • PREP NOW'; if(h>=0&&h<=18&&o.recommendation==='REGISTER')return 'PREP TONIGHT'; return ''; };
+const dropPriority = (o,p) => { let v=Number(o.score||0); if(o.recommendation==='BUY')v+=20; if(o.recommendation==='REGISTER')v+=8; if(o.hidden_gem)v+=5; if(hoursUntil(p?.presale_start)<=24)v+=8; return v; };
+
+const CARD_ACCESS = ['AMERICAN EXPRESS','AMEX','CITI','VISA'];
+
+function cardAccessFor(p){
+  const text = [p?.provider,p?.presale_type,p?.notes,p?.access_method].filter(Boolean).join(' ').toUpperCase();
+  const hits = [];
+  if(/AMERICAN EXPRESS|\bAMEX\b/.test(text)) hits.push('AMEX');
+  if(/\bCITI\b|CITIBANK/.test(text)) hits.push('CITI');
+  if(/\bVISA\b/.test(text)) hits.push('VISA');
+  return hits;
+}
+
+function resaleGate(o){
+  const transferText = [
+    o.transfer_eligibility,o.resale_eligibility,o.restriction_evidence,
+    o.transfer_status,o.transferability,o.delivery_restrictions,o.ticket_restrictions,o.notes
+  ].filter(Boolean).join(' ').toLowerCase();
+
+  const explicitlyBlocked =
+    o.resale_allowed === false ||
+    o.transfer_allowed === false ||
+    ['blocked','prohibited','non-transferable','not transferable'].includes(String(o.transfer_eligibility||'').toLowerCase()) ||
+    ['blocked','prohibited','not for resale'].includes(String(o.resale_eligibility||'').toLowerCase()) ||
+    /non[- ]?transferable|not transferable|resale (?:is )?prohibited|not for resale|lead booker|id required for entry/.test(transferText);
+
+  const explicitlyOkay =
+    o.resale_allowed === true ||
+    o.transfer_allowed === true ||
+    ['verified','allowed','transferable'].includes(String(o.transfer_eligibility||'').toLowerCase()) ||
+    ['verified','allowed'].includes(String(o.resale_eligibility||'').toLowerCase()) ||
+    /transferable|mobile transfer|verified resale/.test(transferText);
+
+  if(explicitlyBlocked) return {level:'block',label:'⛔ RESALE / TRANSFER BLOCKED',detail:'Do not treat this as a resale BUY. Transfer/resale restrictions must be cleared before capital is committed.'};
+  if(explicitlyOkay) return {level:'ok',label:'✓ TRANSFER / RESALE CHECK PASSED',detail:'Current record indicates transferable/resale-eligible inventory. Revalidate before the drop because restrictions can change.'};
+  return {level:'warn',label:'⚠ TRANSFERABILITY NOT VERIFIED',detail:'Ticket Edge must verify transfer/resale rules, delayed delivery, lead-booker/ID requirements and delivery restrictions before BUY.'};
+}
+
+function extractPresaleEmail(){
+  const raw = $('presaleEmailText').value.trim();
+  if(!raw){ $('presaleExtract').innerHTML='<h3>Extracted Drop Prep</h3><div class="empty" style="padding:18px 4px">Paste an email first.</div>'; return; }
+
+  localStorage.setItem('ticketEdge.presaleImportDraft', raw);
+  const text = raw.replace(/\r/g,'');
+  const lines = text.split('\n').map(x=>x.trim()).filter(Boolean);
+  const url = (text.match(/https?:\/\/[^\s<>"')]+/i)||[])[0] || '—';
+  const codeMatch = text.match(/(?:presale|access|offer|promo)\s*(?:code)?\s*[:\-]\s*([A-Z0-9_-]{4,30})/i);
+  const limitMatch = text.match(/(?:ticket|purchase|order)\s*(?:limit|max(?:imum)?)\D{0,8}(\d{1,2})/i);
+  const card = /american express|\bamex\b/i.test(text) ? 'American Express'
+    : /\bciti\b|citibank/i.test(text) ? 'Citi'
+    : /\bvisa\b/i.test(text) ? 'Visa' : '—';
+
+  const restriction = /non[- ]?transferable|not transferable|not for resale|resale prohibited|lead booker|id required/i.test(text)
+    ? '⚠ Restriction language detected — review before buying'
+    : /transferable|mobile transfer|verified resale/i.test(text)
+      ? 'Transfer language detected'
+      : 'Not stated — must verify';
+
+  const deadlineLine = lines.find(x=>/deadline|register by|registration closes|sign up by/i.test(x)) || '—';
+  const presaleLine = lines.find(x=>/presale|pre-sale|early access|member access|cardmember/i.test(x)) || '—';
+  const saleLine = lines.find(x=>/(on sale|onsale|sale begins|tickets go on sale|starts? at)/i.test(x)) || '—';
+  const venueLine = lines.find(x=>/arena|theatre|theater|stadium|center|centre|hall|pavilion|ballroom|amphithea|forum|garden|masonic|aragon/i.test(x)) || '—';
+
+  $('presaleExtract').innerHTML = `
+    <h3>Extracted Drop Prep</h3>
+    <dl>
+      <dt>PRESALE / ACCESS</dt><dd>${esc(presaleLine)}</dd>
+      <dt>SALE / DROP</dt><dd>${esc(saleLine)}</dd>
+      <dt>REGISTRATION DEADLINE</dt><dd>${esc(deadlineLine)}</dd>
+      <dt>VENUE CLUE</dt><dd>${esc(venueLine)}</dd>
+      <dt>CODE</dt><dd>${esc(codeMatch?.[1] || '—')}</dd>
+      <dt>CARD ACCESS</dt><dd>${esc(card)}</dd>
+      <dt>TICKET LIMIT</dt><dd>${esc(limitMatch?.[1] || '—')}</dd>
+      <dt>TRANSFER / RESALE</dt><dd>${esc(restriction)}</dd>
+      <dt>PRIMARY LINK</dt><dd>${url==='—'?'—':`<a href="${esc(url)}" target="_blank" style="color:#9fb5ff">Open link</a>`}</dd>
+    </dl>
+    <div class="miniNote">Beta extraction is intentionally conservative. If a detail is missing, Ticket Edge shows “—” instead of guessing. Future backend ingestion should attach the original email to the matching opportunity and reconcile conflicts against official-source intel.</div>`;
+}
+
+function clearPresaleImport(){
+  $('presaleEmailText').value='';
+  localStorage.removeItem('ticketEdge.presaleImportDraft');
+  $('presaleExtract').innerHTML='<h3>Extracted Drop Prep</h3><div class="empty" style="padding:18px 4px">Paste an email and tap Extract Details.</div>';
+}
+
+let loginSucceeded = false;
+
+async function signIn(){
+  const btn = document.querySelector('#loginScreen .btn.primary');
+  $('loginError').textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+
+  try {
+    const { data, error } = await db.auth.signInWithPassword({
+      email: $('email').value.trim(),
+      password: $('password').value
+    });
+
+    if (error) {
+      $('loginError').textContent = error.message;
+      return;
+    }
+
+    if (!data?.session) {
+      $('loginError').textContent = 'Supabase accepted the login but did not return a session.';
+      return;
+    }
+
+    loginSucceeded = true;
+    await applySession(data.session);
+  } catch (err) {
+    $('loginError').textContent = err?.message || 'Sign-in failed. Please try again.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sign in';
+  }
+}
+
+async function signOut(){
+  loginSucceeded = false;
+  await db.auth.signOut();
+  await applySession(null);
+}
+
+async function applySession(session){
+  const signedIn = !!session;
+
+  // Explicitly toggle both the hidden attribute and inline display.
+  // This prevents Safari/iOS from letting .loginWrap { display:grid }
+  // visually override the hidden state.
+  $('loginScreen').hidden = signedIn;
+  $('loginScreen').style.display = signedIn ? 'none' : 'grid';
+  $('mainApp').hidden = !signedIn;
+  $('mainApp').style.display = signedIn ? '' : 'none';
+
+  if (signedIn) {
+    if ($('authUser')) $('authUser').textContent = 'Signed in: ' + (session.user?.email || 'authenticated user');
+
+    // Inventory and opportunity intelligence load independently.
+    // A failure in one area must never strand the other area on a loading screen.
+    await Promise.allSettled([loadInventory(), loadIntel()]);
+  } else {
+    if ($('authUser')) $('authUser').textContent = 'Signed in: —';
+  }
+}
+
+// Avoid iOS/Safari auth races:
+// - INITIAL_SESSION may report null while a password login is completing.
+// - Only a real SIGNED_OUT event is allowed to kick a successfully
+//   authenticated user back to the login screen.
+db.auth.onAuthStateChange((event, session) => {
+  setTimeout(() => {
+    if (event === 'SIGNED_OUT') {
+      loginSucceeded = false;
+      applySession(null).catch(console.error);
+      return;
+    }
+
+    if (session) {
+      loginSucceeded = true;
+      applySession(session).catch(err => {
+        console.error('Session apply failed:', err);
+        $('loginError').textContent = err?.message || 'Signed in, but loading the dashboard failed.';
+      });
+      return;
+    }
+
+    if (!loginSucceeded && event === 'INITIAL_SESSION') {
+      applySession(null).catch(console.error);
+    }
+  }, 0);
+});
+
+// Restore a saved session once on page load.
+// Ignore a stale null result if a password login has already succeeded.
+db.auth.getSession().then(({data, error}) => {
+  if (error) {
+    console.error('Session restore failed:', error);
+    return;
+  }
+  if (data?.session) {
+    loginSucceeded = true;
+    applySession(data.session).catch(console.error);
+  } else if (!loginSucceeded) {
+    applySession(null).catch(console.error);
+  }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const draft = localStorage.getItem('ticketEdge.presaleImportDraft');
+  if(draft && $('presaleEmailText')) $('presaleEmailText').value = draft;
+  restoreLiveDecisionDraft();
+});
+
+function withTimeout(promise, ms, label){
+  return Promise.race([
+    promise,
+    new Promise((_, reject)=>setTimeout(()=>reject(new Error(label+' timed out after '+Math.round(ms/1000)+' seconds')), ms))
+  ]);
+}
+
+const CACHE_PREFIX='ticketEdge.cache.';
+const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
+
+function cacheRows(name, rows){
+  try{ localStorage.setItem(CACHE_PREFIX+name, JSON.stringify({savedAt:Date.now(),rows:rows||[]})); }catch(_){}
+}
+function cachedRows(name){
+  try{
+    const raw=localStorage.getItem(CACHE_PREFIX+name);
+    if(!raw) return null;
+    const parsed=JSON.parse(raw);
+    return Array.isArray(parsed?.rows) ? parsed : null;
+  }catch(_){ return null; }
+}
+function isJwtTimingError(err){
+  const msg=String(err?.message||err||'').toLowerCase();
+  return msg.includes('jwt issued at future') || msg.includes('jwt') && msg.includes('future');
+}
+
+async function inventorySource(name, queryFactory){
+  let lastErr=null;
+  for(let attempt=1; attempt<=3; attempt++){
+    try{
+      // A newly restored Supabase session can very briefly outrun a backend clock.
+      // Retry JWT "issued at future" responses instead of blanking purchase metadata.
+      if(attempt>1) await sleep(attempt===2 ? 1400 : 2600);
+      const res = await withTimeout(queryFactory(), 12000, name);
+      if(res?.error) throw res.error;
+      const rows=res?.data||[];
+      cacheRows(name,rows);
+      return {name, ok:true, data:rows, error:null, cached:false, attempts:attempt};
+    }catch(err){
+      lastErr=err;
+      console.error(name+' source attempt '+attempt+' failed:', err);
+      if(!isJwtTimingError(err)) break;
+    }
+  }
+
+  const cached=cachedRows(name);
+  if(cached){
+    return {
+      name,
+      ok:true,
+      data:cached.rows,
+      error:lastErr,
+      cached:true,
+      cachedAt:cached.savedAt,
+      warning:lastErr?.message||String(lastErr||'live read failed')
+    };
+  }
+
+  return {name, ok:false, data:[], error:lastErr, cached:false};
+}
+
+function setInventoryRefreshState(state, detail=''){
+  const btn=$('refreshInventoryBtn');
+  if(!btn) return;
+  btn.classList.remove('working','success','errorState');
+  if(state==='working'){
+    btn.disabled=true;
+    btn.classList.add('working');
+    btn.innerHTML='<span class="spin">↻</span> Refreshing…';
+    btn.setAttribute('aria-busy','true');
+  }else if(state==='success'){
+    btn.disabled=false;
+    btn.classList.add('success');
+    btn.textContent='✓ Inventory Updated';
+    btn.removeAttribute('aria-busy');
+    setTimeout(()=>{
+      if(!btn.classList.contains('working')){
+        btn.classList.remove('success');
+        btn.textContent='↻ Refresh Inventory';
+      }
+    },1800);
+  }else if(state==='error'){
+    btn.disabled=false;
+    btn.classList.add('errorState');
+    btn.textContent='! Refresh Failed';
+    btn.removeAttribute('aria-busy');
+    setTimeout(()=>{
+      btn.classList.remove('errorState');
+      btn.textContent='↻ Try Refresh Again';
+    },2200);
+  }else{
+    btn.disabled=false;
+    btn.textContent='↻ Refresh Inventory';
+    btn.removeAttribute('aria-busy');
+  }
+}
+
+async function loadInventory(){
+  setInventoryRefreshState('working');
+  if ($('inventoryList')) $('inventoryList').innerHTML='<div class="loading">Refreshing real inventory…</div>';
+  if ($('inventoryDiag')) $('inventoryDiag').innerHTML='Inventory sources: connecting…';
+
+  // Load each source independently. ticket_inventory is the source of truth for quantity.
+  // A purchases or listings error must not hide real owned tickets.
+  const [pu, ti, li, ms] = await Promise.all([
+    inventorySource('purchases', ()=>db.from('purchases').select('*').order('purchase_date',{ascending:false})),
+    inventorySource('ticket_inventory', ()=>db.from('ticket_inventory').select('*').order('inventory_code',{ascending:true})),
+    inventorySource('ticket_listings', ()=>db.from('ticket_listings').select('*').order('listed_at',{ascending:false})),
+    inventorySource('market_snapshots', ()=>db.from('market_snapshots').select('*').order('captured_at',{ascending:false}))
+  ]);
+
+  purchases = pu.data;
+  ticketInventory = ti.data;
+  ticketListings = li.data;
+  marketSnapshots = ms.data;
+
+  const diag = [pu,ti,li,ms].map(s=>{
+    if(s.ok && s.cached){
+      const age=s.cachedAt ? Math.max(0,Math.round((Date.now()-s.cachedAt)/1000)) : null;
+      return `<span style="color:#ffe2a0">⚠ ${esc(s.name)}: cached ${s.data.length} row${s.data.length===1?'':'s'}${age!=null?' • '+age+'s old':''} • live retry: ${esc(s.warning||'temporary auth timing issue')}</span>`;
+    }
+    if(s.ok) return `<span class="ok">✓ ${esc(s.name)}: ${s.data.length} row${s.data.length===1?'':'s'}${s.attempts>1?' • retry '+s.attempts:''}</span>`;
+    return `<span class="bad">✕ ${esc(s.name)}: ${esc(s.error?.message||s.error||'read failed')}</span>`;
+  }).join(' &nbsp; • &nbsp; ');
+  if ($('inventoryDiag')) $('inventoryDiag').innerHTML = diag;
+
+  if(!ti.ok){
+    $('invCapital').textContent='—'; $('invOwned').textContent='—'; $('invExposed').textContent='—'; $('invSellable').textContent='—';
+    $('inventoryList').innerHTML=`<div class="empty"><b>Ticket inventory read failed.</b><br><br>${esc(ti.error?.message||ti.error||'Unknown error')}<br><br>The six database records are still stored in Supabase; this message is only the authenticated browser read result.</div>`;
+    setInventoryRefreshState('error');
+    return;
+  }
+
+  renderInventory({purchasesOkay:pu.ok, listingsOkay:li.ok, snapshotsOkay:ms.ok});
+  setInventoryRefreshState('success');
+}
+
+
+const SELLER_EVIDENCE = {
+  '63-47800/CH1': {
+    market:'StubHub', snapshot:'Sep 1, 2026', verdict:'HOLD / WATCH', verdictClass:'hold',
+    currentAsk:149, currentPairPayout:268.20, quickAsk:61, trend:'Section pricing down 13% in 3 days',
+    quality:'GA commodity inventory — little seat differentiation',
+    thesis:'Do not chase the platform recommendation down right now. At the $61 quick-sale benchmark, estimated payout would fall below this pair’s cost basis. Keep Pair A exposed while Pair B remains reserved, and reassess after meaningful sell-through or demand movement.',
+    comps:'Platform quick benchmark: $61/ticket. Current live ask: $149/ticket. StubHub reports buyers choosing similar GA inventory at lower prices.'
+  },
+  '57-56435/NCA': {
+    market:'StubHub', snapshot:'Sep 1, 2026', verdict:'HOLD / MAX PROFIT', verdictClass:'max',
+    currentAsk:319, currentPairPayout:574.20, quickAsk:105, trend:'Section pricing down 22% in 3 days; event marked selling fast',
+    quality:'BAL 9 Row 1 — front row of section; materially differentiated from Row 10/11 comps',
+    thesis:'Protect the Row 1 premium. Do not let lower-row-quality section averages price this pair like ordinary BAL 9 inventory. Hold the premium thesis unless Row 1 supply appears, primary inventory expands, or comparable premium inventory starts clearing materially lower.',
+    comps:'Observed BAL 9 buyer-facing snapshots included Row 10 around $107–$187, another BAL 9 pair around $427, and Row 11 around $347. Those are directional comps, not equal-quality Row 1 comps.'
+  }
+};
+
+function latestSnapshotFor(purchaseId){
+  if(!purchaseId) return null;
+  return marketSnapshots.find(s=>s.purchase_id===purchaseId) || null;
+}
+
+function snapshotEvidenceFor(p){
+  const s=latestSnapshotFor(p?.id);
+  if(!s) return p?.order_reference ? SELLER_EVIDENCE[p.order_reference] || null : null;
+  const historyCount=marketSnapshots.filter(x=>x.purchase_id===p.id).length;
+  const captured=s.captured_at ? new Date(s.captured_at).toLocaleString([],{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
+  return {
+    market:s.marketplace || 'Marketplace',
+    snapshot:captured,
+    verdict:s.strategy_verdict || 'WAIT / WATCH',
+    verdictClass:s.verdict_class || 'hold',
+    currentAsk:Number(s.current_ask_per_ticket),
+    currentPairPayout:Number(s.projected_payout),
+    quickAsk:Number(s.quick_sale_benchmark),
+    quickProjectedPayout:s.quick_projected_payout==null?null:Number(s.quick_projected_payout),
+    trend:s.trend_summary || 'No trend note captured',
+    quality:s.comp_quality || 'Comp quality not graded',
+    thesis:s.thesis || 'Awaiting strategy thesis.',
+    comps:s.comp_notes || 'No comparable notes captured.',
+    sourceMode:'database snapshot',
+    historyCount,
+    sourceType:s.source_type || 'manual_capture'
+  };
+}
+
+function sellerStrategyFor(p, units, listings){
+  const e=snapshotEvidenceFor(p);
+  if(!e) return null;
+  const exposedUnits=units.filter(u=>listings.some(l=>l.inventory_id===u.id && l.listing_status==='active'));
+  const qty=Math.max(1, exposedUnits.length || Math.min(2, units.length));
+  const cost=exposedUnits.length ? exposedUnits.reduce((s,u)=>s+Number(u.cost_basis||0),0) : units.slice(0,qty).reduce((s,u)=>s+Number(u.cost_basis||0),0);
+  const currentPayout=Number(e.currentPairPayout||0);
+  const currentProfit=currentPayout-cost;
+  const currentRoi=cost?currentProfit/cost*100:0;
+  const grossAsk=Number(e.currentAsk||0)*qty;
+  const feeRate=grossAsk>0?1-(currentPayout/grossAsk):0;
+  const quickPayout=e.quickProjectedPayout!=null ? Number(e.quickProjectedPayout) : Number(e.quickAsk||0)*qty*(1-feeRate);
+  const quickProfit=quickPayout-cost;
+  const quickRoi=cost?quickProfit/cost*100:0;
+  return {...e,qty,cost,currentPayout,currentProfit,currentRoi,quickPayout,quickProfit,quickRoi,feeRate};
+}
+
+function strategyHtml(p,units,listings){
+  const s=sellerStrategyFor(p,units,listings);
+  if(!s) return `<div class="sellerWait"><b>SELLER STRATEGY:</b> WAIT / LIST / REPRICE / SELL will be driven by current comps. Ticket Edge will not invent a listing price before market evidence is attached.</div>`;
+  const usd=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}).format(Number(n));
+  const pct=n=>`${Number(n).toFixed(0)}%`;
+  const quickTone=s.quickProfit<0?'color:#ff9da5':'color:#bdf6d6';
+  const sourceNote=s.sourceMode==='database snapshot'
+    ? `${s.market} market snapshot • ${s.snapshot} • ${s.historyCount} stored snapshot${s.historyCount===1?'':'s'} • ${s.sourceType}`
+    : `${s.market} evidence snapshot • ${s.snapshot} • fallback baseline; run Build 6.4 market-snapshot SQL to persist history`;
+  return `<div class="strategyBox">
+    <div class="strategyTop"><div><div class="strategyVerdict ${s.verdictClass}">SELLER VERDICT: ${esc(s.verdict)}</div><div class="miniNote">${esc(sourceNote)}</div></div></div>
+    <div class="strategyGrid">
+      <div><span>Current ask</span><b>${usd(s.currentAsk)}/ticket</b></div>
+      <div><span>Current projected payout</span><b>${usd(s.currentPayout)} / ${s.qty} tix</b></div>
+      <div><span>Current net profit</span><b>${usd(s.currentProfit)} • ${pct(s.currentRoi)} ROI</b></div>
+      <div><span>Quick-sale benchmark</span><b>${usd(s.quickAsk)}/ticket</b></div>
+      <div><span>Quick projected payout</span><b>${usd(s.quickPayout)}</b></div>
+      <div><span>Quick net</span><b style="${quickTone}">${usd(s.quickProfit)} • ${pct(s.quickRoi)} ROI</b></div>
+      <div><span>Market trend</span><b>${esc(s.trend)}</b></div>
+      <div><span>Comp quality</span><b>${esc(s.quality)}</b></div>
+    </div>
+    <div class="strategyWhy"><b>WHY:</b> ${esc(s.thesis)}</div>
+    <div class="compStrip"><b>COMP READ:</b> ${esc(s.comps)}</div>
+  </div>`;
+}
+
+function renderInventory(sourceState={purchasesOkay:true,listingsOkay:true}){
+  const activeUnits=ticketInventory.filter(t=>!['sold','transferred'].includes(t.inventory_status));
+  const exposedIds=new Set(ticketListings.filter(l=>l.listing_status==='active').map(l=>l.inventory_id));
+  const exposed=activeUnits.filter(t=>exposedIds.has(t.id)).length;
+  const sellable=activeUnits.filter(t=>!['reserved','sale_pending'].includes(t.inventory_status)&&!exposedIds.has(t.id)).length;
+
+  // Prefer transaction totals. If purchases cannot be read, individual cost basis is a safe fallback.
+  const capital = sourceState.purchasesOkay && purchases.length
+    ? purchases.filter(p=>!['sold','cancelled'].includes(p.status)).reduce((s,p)=>s+Number(p.total_cost||0),0)
+    : activeUnits.reduce((s,t)=>s+Number(t.cost_basis||0),0);
+
+  $('invCapital').textContent=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(capital);
+  $('invOwned').textContent=activeUnits.length;
+  $('invExposed').textContent=sourceState.listingsOkay ? exposed : '—';
+  $('invSellable').textContent=sourceState.listingsOkay ? sellable : activeUnits.filter(t=>!['reserved','sale_pending'].includes(t.inventory_status)).length;
+
+  if(!ticketInventory.length){
+    $('inventoryList').innerHTML='<div class="inventoryEmpty">No individual ticket inventory is visible to this signed-in user.</div>';
+    return;
+  }
+
+  // Group by purchase_id so inventory still renders even if purchase metadata is temporarily unavailable.
+  const purchaseMap = new Map(purchases.map(p=>[p.id,p]));
+  const groupIds = [...new Set(ticketInventory.map(t=>t.purchase_id))];
+
+  $('inventoryList').innerHTML = groupIds.map(pid=>{
+    const p = purchaseMap.get(pid) || null;
+    const units=ticketInventory.filter(t=>t.purchase_id===pid);
+    const unitIds=new Set(units.map(t=>t.id));
+    const listings=ticketListings.filter(l=>unitIds.has(l.inventory_id));
+    const activeListings=listings.filter(l=>l.listing_status==='active');
+    const delist=listings.filter(l=>l.listing_status==='delist_required');
+    const marketExposed=sourceState.listingsOkay ? new Set(activeListings.map(l=>l.inventory_id)).size : null;
+    const reserved=units.filter(t=>t.inventory_status==='reserved').length;
+    const maxSellable=units.filter(t=>!['reserved','sale_pending','sold','transferred'].includes(t.inventory_status) && (!sourceState.listingsOkay || !activeListings.some(l=>l.inventory_id===t.id))).length;
+    const unitCapital=units.reduce((s,t)=>s+Number(t.cost_basis||0),0);
+    const title=p ? (p.event_name||p.artist||'Purchase') : (units[0]?.inventory_code?.includes('-CHI-') ? 'Stella Lefty — Chicago' : units[0]?.inventory_code?.includes('-SF-') ? 'Stella Lefty — San Francisco' : 'Inventory position');
+    const seat=p ? [p.section,p.row_info?`Row ${p.row_info}`:'',p.seat_info?`Seats ${p.seat_info}`:''].filter(Boolean).join(' • ') : [...new Set(units.map(t=>[t.section,t.row_info?`Row ${t.row_info}`:''].filter(Boolean).join(' • ')))].join(' / ');
+    const meta = p
+      ? `${esc(p.city||'')}${p.venue?' • '+esc(p.venue):''}${p.event_date?' • '+fmtEventDate(p):''}<br>${esc(seat)} • ${p.quantity||units.length} ticket${Number(p.quantity||units.length)===1?'':'s'} • Cost ${money(p.total_cost)}`
+      : `${esc(seat)} • ${units.length} ticket${units.length===1?'':'s'} • Cost basis ${new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(unitCapital)} <span style="color:#ffe2a0">(purchase metadata unavailable)</span>`;
+
+    return `<div class="invGroup">
+      <div class="invHead"><div><div class="invTitle">${esc(title)}</div><div class="invSub">${meta}</div></div><span class="modeSafe">SAFE MODE</span></div>
+      <div class="ticketUnits">${units.map(t=>`<span class="unit ${esc(t.inventory_status)}">${esc(t.inventory_code)} • ${esc(String(t.inventory_status||'owned').toUpperCase())}${t.seat_info?' • Seat '+esc(t.seat_info):''} • ${new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(t.cost_basis||0))}</span>`).join('')}</div>
+      <div class="oversell"><b>OVERSELL GUARD</b> — Owned: ${units.filter(t=>!['sold','transferred'].includes(t.inventory_status)).length} • Market exposed: ${sourceState.listingsOkay?marketExposed:'unverified'} • Reserve: ${reserved} • Max sellable: ${maxSellable}</div>
+      ${sourceState.listingsOkay && delist.length?`<div class="delist">🚨 DELIST NOW — ${delist.length} duplicate listing${delist.length===1?'':'s'} require removal.</div>`:''}
+      ${!sourceState.listingsOkay?'<div class="delist" style="background:#2a210f;border-color:#6e571d;color:#ffe2a0">⚠ LISTING SYNC UNVERIFIED — SAFE MODE remains in force. Do not rely on cross-market exposure counts until ticket_listings can be read.</div>':''}
+      ${strategyHtml(p,units,listings)}
+    </div>`;
+  }).join('');
+}
+
+
+function oppAccess(o,p){
+  return p || {
+    presale_start:o.presale_start,
+    registration_deadline:o.registration_deadline,
+    provider:o.access_method,
+    presale_type:o.presale_mechanics,
+    notes:o.prep_reason,
+    access_method:o.access_method
+  };
+}
+function effectivePrep(o,p){
+  if(o.prep_state) return String(o.prep_state).toUpperCase();
+  return prepTier(o,p);
+}
+function effectiveScore(o){
+  return o.home_run_score ?? o.score ?? null;
+}
+function moneyMaybe(v){
+  return v==null || v==='' ? '—' : money(Number(v));
+}
+function pctMaybe(v){
+  return v==null || v==='' ? '—' : `${Math.round(Number(v))}%`;
+}
+function intelScenario(o){
+  const has = [o.conservative_resale_per_ticket,o.base_resale_per_ticket,o.upside_resale_per_ticket]
+    .some(v=>v!=null);
+  if(!has) return '';
+  return `<div class="change">
+    <b>SCENARIO ECONOMICS</b><br>
+    Conservative: ${moneyMaybe(o.conservative_resale_per_ticket)}/tix → ${moneyMaybe(o.conservative_net_profit)} net • ${pctMaybe(o.conservative_roi)} ROI<br>
+    Base: ${moneyMaybe(o.base_resale_per_ticket)}/tix → ${moneyMaybe(o.base_net_profit)} net • ${pctMaybe(o.base_roi)} ROI<br>
+    Upside: ${moneyMaybe(o.upside_resale_per_ticket)}/tix → ${moneyMaybe(o.upside_net_profit)} net • ${pctMaybe(o.upside_roi)} ROI
+  </div>`;
+}
+
+async function loadIntel(){
+  $('eventList').innerHTML = '<div class="loading">Refreshing real opportunity feed…</div>';
+
+  const [oRes,cRes,pRes] = await Promise.all([
+    db.from('opportunities')
+      .select('*')
+      .eq('is_test',false)
+      .in('status',['active','bought'])
+      .order('home_run_score',{ascending:false,nullsFirst:false})
+      .order('score',{ascending:false,nullsFirst:false}),
+    db.from('opportunity_changes').select('*').order('changed_at',{ascending:false}),
+    db.from('presales').select('*').order('presale_start',{ascending:true})
+  ]);
+
+  if(oRes.error){
+    $('eventList').innerHTML=`<div class="empty"><b>Real opportunity feed could not load.</b><br><br>${esc(oRes.error.message)}</div>`;
+    opportunities=[]; changes=[]; presales=[]; render(); return;
+  }
+
+  opportunities=oRes.data||[];
+  changes=cRes.error ? [] : (cRes.data||[]);
+  presales=pRes.error ? [] : (pRes.data||[]);
+
+  const latest=opportunities
+    .map(x=>x.evidence_checked_at||x.last_scanned_at||x.updated_at)
+    .filter(Boolean).sort().pop();
+
+  $('lastUpdated').textContent='Last updated: '+(latest?fmtDate(latest):'—');
+  if($('oppFeedStatus')) $('oppFeedStatus').textContent=`Real feed: ${opportunities.length} opportunit${opportunities.length===1?'y':'ies'}`;
+  render();
+}
+
+
+let cartScreenshotObjectUrl=null;
+
+function setOcrStatus(msg, cls=''){
+  const el=$('ocrStatus');
+  if(!el) return;
+  el.className='ocrStatus '+cls;
+  el.textContent=msg;
+}
+function setIfBlank(id,value){
+  if(!value || !$(id)) return;
+  if(!String($(id).value||'').trim()) $(id).value=value;
+}
+function parseMoneyText(s){
+  if(!s) return null;
+  const n=Number(String(s).replace(/[$,\s]/g,''));
+  return Number.isFinite(n)?n:null;
+}
+function extractCartFieldsFromText(raw){
+  const text=String(raw||'').replace(/\r/g,'');
+  const oneLine=text.replace(/\n+/g,' ');
+  const lines=text.split('\n').map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean);
+
+  const confirmationSignals=[
+    /you got (?:'|’)em/i,/you got tickets to/i,/order confirmed/i,/confirmation/i,
+    /payment summary/i,/view tickets/i,/ticketmaster/i
+  ].filter(rx=>rx.test(oneLine)).length;
+
+  const cartSignals=[
+    /checkout/i,/review (?:your )?order/i,/place order/i,/secure tickets/i,
+    /subtotal/i,/fees/i,/order total/i,/complete purchase/i,/time remaining/i
+  ].filter(rx=>rx.test(oneLine)).length;
+
+  const route = confirmationSignals>cartSignals && confirmationSignals>=2 ? 'confirmation'
+    : cartSignals>0 ? 'cart' : 'unknown';
+
+  // ---------- Artist / Event ----------
+  let event='', eventConfidence='none';
+
+  // Ticketmaster subject/body pattern: "You Got Tickets To Macy Gray"
+  const gotMatch = oneLine.match(/you got tickets to\s+([A-Z0-9][A-Za-z0-9 .&'’\-]{2,80}?)(?=\s+(?:ticketmaster|order|payment|my account|view tickets|customer_support|reply-to|thu|fri|sat|sun|mon|tue|wed)\b|$)/i);
+  if(gotMatch){
+    event=gotMatch[1].trim();
+    eventConfidence='high';
+  }
+
+  // Fallback: clean standalone artist/title line only.
+  if(!event){
+    const badLine=/ticketmaster|gmail|reply-to|customer_support|order|payment|section|row|seat|doors|dinner|service|ages?\s*\d|with id|my account|view tickets|help center|privacy|terms|support/i;
+    const candidate=lines.find(x =>
+      x.length>=3 && x.length<=70 &&
+      !badLine.test(x) &&
+      /^[A-Za-z0-9][A-Za-z0-9 .&'’\-]+$/.test(x)
+    );
+    if(candidate){
+      event=candidate;
+      eventConfidence='medium';
+    }
+  }
+
+  // ---------- Quantity ----------
+  let qty=null, qtyConfidence='none';
+  const qtyPatterns=[
+    /(?:qty|quantity)\s*[:x-]?\s*(\d{1,2})\b/i,
+    /\b(\d{1,2})\s*(?:tickets?|tix)\b/i,
+    /\bx(\d{1,2})\s*tickets?\b/i
+  ];
+  for(const rx of qtyPatterns){
+    const m=oneLine.match(rx);
+    if(m){
+      const n=Number(m[1]);
+      if(n>=1 && n<=20){
+        qty=n; qtyConfidence='high'; break;
+      }
+    }
+  }
+
+  // ---------- Total paid ----------
+  let total=null, totalConfidence='none';
+  const strongTotals=[
+    /payment\s+summary[\s\S]{0,180}?\btotal\s*[:$]?\s*\$?\s*([\d,]+(?:\.\d{2})?)/i,
+    /(?:order\s+total|grand\s+total|total\s+due)\s*[:$]?\s*\$?\s*([\d,]+(?:\.\d{2})?)/i
+  ];
+  for(const rx of strongTotals){
+    const m=oneLine.match(rx);
+    if(m){
+      const n=parseMoneyText(m[1]);
+      if(n && n>0 && n<10000){
+        total=n; totalConfidence='high'; break;
+      }
+    }
+  }
+  if(!total){
+    const generic=[...oneLine.matchAll(/\btotal\b\s*[:$]?\s*\$?\s*([\d,]+(?:\.\d{2})?)/ig)];
+    if(generic.length){
+      const n=parseMoneyText(generic[generic.length-1][1]);
+      if(n && n>0 && n<10000){ total=n; totalConfidence='medium'; }
+    }
+  }
+
+  // ---------- Order number ----------
+  let orderRef='', orderConfidence='none';
+  const orderPatterns=[
+    /order\s*(?:number|no\.?|#)\s*[:#-]?\s*([A-Z0-9][A-Z0-9\-\/]{4,30})/i,
+    /\border\s*#\s*([A-Z0-9][A-Z0-9\-\/]{4,30})/i
+  ];
+  for(const rx of orderPatterns){
+    const m=oneLine.match(rx);
+    if(m){ orderRef=m[1].trim(); orderConfidence='high'; break; }
+  }
+
+  // ---------- Seat block ----------
+  let section='', row='', seats='';
+  let sectionConfidence='none', rowConfidence='none', seatsConfidence='none';
+
+  const secM=oneLine.match(/\bsection\s*[:#-]?\s*([A-Z0-9]{1,12})\b/i);
+  if(secM){ section=secM[1]; sectionConfidence='high'; }
+
+  const rowM=oneLine.match(/\brow\s*[:#-]?\s*([A-Z0-9]{1,8})\b/i);
+  if(rowM){ row=rowM[1]; rowConfidence='high'; }
+
+  const seatsM=oneLine.match(/\bseats?\s*[:#-]?\s*([A-Z0-9]+(?:\s*[-–]\s*[A-Z0-9]+)?(?:\s*,\s*[A-Z0-9]+)*)\b/i);
+  if(seatsM){ seats=seatsM[1].replace(/\s+/g,' ').trim(); seatsConfidence='high'; }
+
+  // ---------- Venue / market ----------
+  let venue='', venueConfidence='none';
+  const venueTokens=/(arena|ballroom|theatre|theater|stadium|auditorium|center|centre|hall|masonic|pavilion|forum|club|house of blues|casino|resort|amphitheatre|amphitheater)/i;
+
+  // Prefer a compact line that actually looks like a venue, never Help Center boilerplate.
+  const venueLine=lines.find(x =>
+    x.length<=100 &&
+    venueTokens.test(x) &&
+    !/help center|customer support|privacy|terms|ticketmaster/i.test(x)
+  );
+  if(venueLine){ venue=venueLine; venueConfidence='medium'; }
+
+  // ---------- Event date/time ----------
+  let dateLine='', dateConfidence='none';
+  const dateCandidates=lines.filter(x =>
+    /\b(?:mon|tue|wed|thu|fri|sat|sun)\b/i.test(x) &&
+    /\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\b/i.test(x) &&
+    /\b\d{1,2}(?::\d{2})?\s*(?:am|pm)\b/i.test(x)
+  );
+  if(dateCandidates.length){
+    // Avoid email-header timestamps such as "Thu, Aug 24, 2023 at 12:02 PM"
+    const eventLike=dateCandidates.find(x =>
+      !/@|reply-to|gmail|customer_support|email\.ticketmaster|sent:|from:|to:/i.test(x)
+    );
+    if(eventLike){
+      dateLine=eventLike; dateConfidence='medium';
+    }
+  }
+
+  const note=[
+    section?`Section ${section}`:'',
+    row?`Row ${row}`:'',
+    seats?`Seats ${seats}`:'',
+    orderRef?`Order ${orderRef}`:''
+  ].filter(Boolean).join(' • ');
+
+  return {
+    route,event,venue,dateLine,qty,total,note,section,row,seats,orderRef,
+    confidence:{
+      event:eventConfidence, qty:qtyConfidence, total:totalConfidence,
+      venue:venueConfidence, dateLine:dateConfidence, orderRef:orderConfidence,
+      section:sectionConfidence, row:rowConfidence, seats:seatsConfidence
+    }
+  };
+}
+
+async function waitForPdfJs(timeoutMs=8000){
+  const start=Date.now();
+  while(!window.pdfjsLib){
+    if(Date.now()-start>timeoutMs) throw new Error('PDF reader failed to load');
+    await sleep(100);
+  }
+  return window.pdfjsLib;
+}
+
+async function pdfToCanvasImages(file, maxPages=3){
+  const pdfjsLib=await waitForPdfJs();
+  const bytes=new Uint8Array(await file.arrayBuffer());
+  const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
+  const canvases=[];
+  const pageCount=Math.min(pdf.numPages,maxPages);
+
+  for(let i=1;i<=pageCount;i++){
+    setOcrStatus(`Preparing PDF page ${i} of ${pageCount}…`,'ocrWarn');
+    const page=await pdf.getPage(i);
+    const viewport=page.getViewport({scale:1.7});
+    const canvas=document.createElement('canvas');
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    canvas.width=Math.ceil(viewport.width);
+    canvas.height=Math.ceil(viewport.height);
+    await page.render({canvasContext:ctx,viewport}).promise;
+    canvases.push(canvas);
+  }
+  return canvases;
+}
+
+async function ocrSource(source,label){
+  const result=await Tesseract.recognize(source,'eng',{
+    logger:m=>{
+      if(m.status==='recognizing text'){
+        setOcrStatus(`${label}… ${Math.round((m.progress||0)*100)}%`,'ocrWarn');
+      }
+    }
+  });
+  return result?.data?.text||'';
+}
+
+
+
+function setFieldWithState(inputId, value, confidence){
+  const input=$(inputId);
+  const state=$(inputId+'State');
+  if(!input) return;
+
+  input.value=value||'';
+
+  if(!state) return;
+  if(value && confidence==='high'){
+    state.className='fieldState good';
+    state.textContent='✓ High confidence';
+  }else if(value && confidence==='medium'){
+    state.className='fieldState warn';
+    state.textContent='Review — medium confidence';
+  }else{
+    state.className='fieldState bad';
+    state.textContent='Not found — review';
+  }
+}
+
+function setRouteUI(route, fields={}){
+  const routeEl=$('intakeRoute');
+  if(routeEl){
+    routeEl.className='intakeRoute '+route;
+    routeEl.textContent=route==='cart' ? 'CART / CHECKOUT'
+      : route==='confirmation' ? 'PURCHASE CONFIRMATION'
+      : 'UNCERTAIN';
+  }
+
+  const isConfirmation=route==='confirmation';
+  $('purchaseConfirmPanel').hidden=!isConfirmation;
+  $('liveCartFields').classList.toggle('modeHidden', isConfirmation);
+  $('decisionResult').classList.toggle('modeHidden', isConfirmation);
+
+  if(isConfirmation){
+    const c=fields.confidence||{};
+    setFieldWithState('pcEvent',fields.event,c.event);
+    setFieldWithState('pcQty',fields.qty,c.qty);
+    setFieldWithState('pcTotal',fields.total,c.total);
+    setFieldWithState('pcVenue',fields.venue,c.venue);
+    setFieldWithState('pcDate',fields.dateLine,c.dateLine);
+    setFieldWithState('pcOrder',fields.orderRef,c.orderRef);
+    setFieldWithState('pcSection',fields.section,c.section);
+    setFieldWithState('pcRow',fields.row,c.row);
+    setFieldWithState('pcSeats',fields.seats,c.seats);
+
+    const found=[
+      fields.event?'event':'',
+      fields.qty?'quantity':'',
+      fields.total?'total':'',
+      fields.venue?'venue':'',
+      fields.dateLine?'date/time':'',
+      fields.orderRef?'order #':'',
+      fields.section?'section':'',
+      fields.row?'row':'',
+      fields.seats?'seats':''
+    ].filter(Boolean);
+
+    $('confirmSummary').textContent = found.length
+      ? `Parsed ${found.length} purchase field${found.length===1?'':'s'}: ${found.join(', ')}. Only high/medium-confidence matches were inserted; everything else was left blank for review.`
+      : 'Ticket Edge recognized a purchase confirmation but could not safely map the purchase fields. Review the extracted text instead of trusting guesses.';
+
+    $('intakeMessage').textContent='Purchase confirmation detected. Ticket Edge now favors blank fields over bad guesses.';
+  }else if(route==='cart'){
+    $('intakeMessage').textContent='Cart / checkout detected. Review the extracted cart values, add realistic resale comps, then analyze.';
+  }else{
+    $('intakeMessage').textContent='Ticket Edge is unsure which route this belongs to. Review the extracted text before using it.';
+  }
+}
+
+function switchToLiveCart(){
+  setRouteUI('cart',{});
+  if($('pcEvent').value) $('dEvent').value=$('pcEvent').value;
+  if($('pcQty').value) $('dQty').value=$('pcQty').value;
+  if($('pcTotal').value) $('dCart').value=$('pcTotal').value;
+  const note=[
+    $('pcSection').value?`Section ${$('pcSection').value}`:'',
+    $('pcRow').value?`Row ${$('pcRow').value}`:'',
+    $('pcSeats').value?`Seats ${$('pcSeats').value}`:''
+  ].filter(Boolean).join(' • ');
+  if(note) $('dNote').value=note;
+}
+
+function purchaseDraftPayload(){
+  return {
+    event:$('pcEvent').value.trim(),
+    qty:Number($('pcQty').value)||null,
+    total:Number($('pcTotal').value)||null,
+    venue:$('pcVenue').value.trim(),
+    eventDateText:$('pcDate').value.trim(),
+    orderReference:$('pcOrder').value.trim(),
+    section:$('pcSection').value.trim(),
+    row:$('pcRow').value.trim(),
+    seats:$('pcSeats').value.trim(),
+    source:$('pcSource').value.trim()||'Ticketmaster',
+    savedAt:new Date().toISOString()
+  };
+}
+
+function savePurchaseDraft(){
+  const p=purchaseDraftPayload();
+  const missing=[];
+  if(!p.event) missing.push('artist/event');
+  if(!p.qty) missing.push('quantity');
+  if(!p.total) missing.push('total paid');
+
+  if(missing.length){
+    $('purchaseSaveStatus').textContent=`⚠ Review before saving: missing ${missing.join(', ')}.`;
+    return;
+  }
+
+  localStorage.setItem('ticketEdge.purchaseDraft',JSON.stringify(p));
+  $('purchaseSaveStatus').textContent='✓ Purchase draft saved locally. Next step is writing reviewed confirmations into purchases + ticket_inventory.';
+}
+
+function matchExistingPurchase(){
+  const p=purchaseDraftPayload();
+  const matches=purchases.filter(x=>{
+    if(p.orderReference && x.order_reference && String(x.order_reference).toLowerCase()===p.orderReference.toLowerCase()) return true;
+    if(p.total && Number(x.total_cost)===Number(p.total)) return true;
+    return false;
+  });
+  $('purchaseSaveStatus').textContent = matches.length
+    ? `✓ Match found: ${matches[0].event_name||matches[0].artist||'existing purchase'} • ${money2(Number(matches[0].total_cost||0))}`
+    : 'No existing purchase matched by order number or total. Save as a new purchase draft.';
+}
+
+async function handleCartScreenshot(event){
+  const file=event?.target?.files?.[0];
+  if(!file) return;
+
+  $('shotPreview').hidden=false;
+  $('ocrText').textContent='';
+
+  try{
+    let raw='';
+    const isPdf=file.type==='application/pdf' || /\.pdf$/i.test(file.name||'');
+
+    if(isPdf){
+      if(cartScreenshotObjectUrl){
+        URL.revokeObjectURL(cartScreenshotObjectUrl);
+        cartScreenshotObjectUrl=null;
+      }
+      $('shotImage').removeAttribute('src');
+      $('shotImage').style.display='none';
+      setOcrStatus('Opening PDF locally…','ocrWarn');
+
+      const pages=await pdfToCanvasImages(file,3);
+      const chunks=[];
+      for(let i=0;i<pages.length;i++){
+        const text=await ocrSource(pages[i],`Reading PDF page ${i+1} of ${pages.length}`);
+        chunks.push(text);
+      }
+      raw=chunks.join('\n\n--- PAGE BREAK ---\n\n');
+    }else{
+      if(cartScreenshotObjectUrl) URL.revokeObjectURL(cartScreenshotObjectUrl);
+      cartScreenshotObjectUrl=URL.createObjectURL(file);
+      $('shotImage').src=cartScreenshotObjectUrl;
+      $('shotImage').style.display='';
+      setOcrStatus('Reading screenshot locally… this may take several seconds.','ocrWarn');
+      raw=await ocrSource(file,'Reading screenshot');
+    }
+
+    $('ocrText').textContent=raw || 'No readable text detected.';
+    const fields=extractCartFieldsFromText(raw);
+
+    setRouteUI(fields.route, fields);
+
+    if(fields.route!=='confirmation') setIfBlank('dEvent',fields.event);
+    if(fields.route!=='confirmation'){
+      if(fields.qty && (!$('dQty').value || $('dQty').value==='2')) $('dQty').value=fields.qty;
+      setIfBlank('dCart',fields.total);
+      if(fields.note){
+        const existing=$('dNote').value.trim();
+        $('dNote').value=existing ? existing+' • '+fields.note : fields.note;
+      }
+    }
+
+    const found=[
+      fields.event?'event':'',
+      fields.qty?'quantity':'',
+      fields.total?'cart total':'',
+      fields.note?'seat/order details':''
+    ].filter(Boolean);
+
+    const sourceLabel=isPdf?'PDF':'Screenshot';
+    if(found.length){
+      const routeMsg = fields.route==='confirmation'
+        ? 'Purchase confirmation detected. Live Drop fields are hidden; review the Purchase / Inventory Intake card below.'
+        : fields.route==='cart'
+          ? 'Cart/checkout detected. Review the extracted cart fields, add resale comps, then tap Analyze Cart.'
+          : 'File type is uncertain. Review what was extracted before using it.';
+      setOcrStatus(`${sourceLabel} read. Filled: ${found.join(', ')}. ${routeMsg}`,'ocrGood');
+    }else{
+      setOcrStatus(`${sourceLabel} was read, but Ticket Edge could not confidently map the important fields. Nothing was guessed.`,'ocrWarn');
+    }
+  }catch(err){
+    console.error('Ticket intake failed:',err);
+    setOcrStatus(`Could not read this file: ${err?.message||err}. Try another screenshot/PDF or enter the missing fields manually.`,'ocrBad');
+  }
+}
+
+function clearCartScreenshot(){
+  if(cartScreenshotObjectUrl){
+    URL.revokeObjectURL(cartScreenshotObjectUrl);
+    cartScreenshotObjectUrl=null;
+  }
+  if($('cartScreenshot')) $('cartScreenshot').value='';
+  if($('shotImage')) { $('shotImage').removeAttribute('src'); $('shotImage').style.display=''; }
+  if($('shotPreview')) $('shotPreview').hidden=true;
+  if($('ocrText')) $('ocrText').textContent='';
+  setOcrStatus('Choose an existing screenshot or PDF from Photos or Files.');
+  if($('intakeRoute')){
+    $('intakeRoute').className='intakeRoute unknown';
+    $('intakeRoute').textContent='NOT YET DETECTED';
+  }
+  if($('purchaseConfirmPanel')) $('purchaseConfirmPanel').hidden=true;
+  if($('liveCartFields')) $('liveCartFields').classList.remove('modeHidden');
+  if($('decisionResult')) $('decisionResult').classList.remove('modeHidden');
+  if($('intakeMessage')) $('intakeMessage').textContent='Ticket Edge will route carts to Live Drop Decision Mode and confirmations to Purchase / Inventory Intake.';
+}
+
+
+function nval(id){
+  const n=Number($(id)?.value);
+  return Number.isFinite(n)?n:0;
+}
+function pct(n){ return Number.isFinite(n) ? `${Math.round(n)}%` : '—'; }
+function money2(n){ return Number.isFinite(n) ? new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(n) : '—'; }
+
+function liveScenario(resalePerTicket, qty, feePct, cartTotal){
+  const gross=resalePerTicket*qty;
+  const payout=gross*(1-feePct/100);
+  const net=payout-cartTotal;
+  const roi=cartTotal>0 ? (net/cartTotal)*100 : 0;
+  return {gross,payout,net,roi,netPerTicket:qty?net/qty:0};
+}
+
+function analyzeLiveCart(){
+  const qty=Math.max(1,Math.round(nval('dQty')||1));
+  const cart=nval('dCart');
+  const bankroll=nval('dBankroll');
+  const fee=Math.max(0,Math.min(50,nval('dFee')));
+  const hold=Math.max(0,nval('dHold'));
+  const transfer=$('dTransfer').value;
+  const cons=liveScenario(nval('dCons'),qty,fee,cart);
+  const base=liveScenario(nval('dBase'),qty,fee,cart);
+  const up=liveScenario(nval('dUp'),qty,fee,cart);
+  const scarcity=Math.max(1,Math.min(10,nval('dScarcity')||1));
+  const diff=Math.max(1,Math.min(10,nval('dDiff')||1));
+  const dilution=Math.max(1,Math.min(10,nval('dDilution')||1));
+  const deploy=bankroll>0 ? (cart/bankroll)*100 : null;
+  const dry=bankroll>0 ? Math.max(0,bankroll-cart) : null;
+
+  if(cart<=0 || nval('dBase')<=0){
+    $('decisionResult').innerHTML='<div class="empty" style="padding:12px">Enter the all-in cart total and at least a Base resale estimate.</div>';
+    return;
+  }
+
+  // Home-Run Score: transparent heuristic, not an external fact.
+  const profitStrength=Math.max(0,Math.min(10,base.netPerTicket/12));
+  const roiStrength=Math.max(0,Math.min(10,base.roi/20));
+  const conservativeSafety=Math.max(0,Math.min(10,(cons.netPerTicket+25)/10));
+  const capitalPenalty=deploy==null?2:Math.max(0,(deploy-35)/8);
+  const holdPenalty=Math.max(0,(hold-3)*0.8);
+  let homeRun=Math.round(
+      scarcity*2.2 + diff*1.8 + profitStrength*2.1 + roiStrength*1.4 +
+      conservativeSafety*1.2 + (11-dilution)*1.3 - capitalPenalty - holdPenalty
+  );
+  homeRun=Math.max(0,Math.min(100,homeRun));
+
+  let verdict='HOLD';
+  const reasons=[];
+  const longHold=hold>=4;
+  const longHoldBaseOkay=base.netPerTicket>=60;
+  const strongLongHold=base.netPerTicket>=75;
+  const conservativePositive=cons.net>0;
+  const bankrollHeavy=deploy!=null && deploy>45;
+
+  if(transfer==='blocked'){
+    verdict='WALK';
+    reasons.push('transfer/resale is blocked');
+  }else if(base.net<=0){
+    verdict='WALK';
+    reasons.push('base case loses money after seller fees');
+  }else if(longHold && !longHoldBaseOkay){
+    verdict='WALK';
+    reasons.push(`long hold only produces ${money2(base.netPerTicket)} net per ticket in the base case`);
+  }else if(cons.net<0 && base.roi<60){
+    verdict='WALK';
+    reasons.push('conservative case loses money without enough base-case compensation');
+  }else if(transfer==='unverified'){
+    verdict='HOLD';
+    reasons.push('transferability must be verified before BUY');
+  }else if(bankrollHeavy && homeRun<82){
+    verdict='HOLD';
+    reasons.push(`cart commits ${Math.round(deploy)}% of bankroll and needs a stronger edge`);
+  }else if(
+      conservativePositive &&
+      base.roi>=50 &&
+      (!longHold || strongLongHold) &&
+      homeRun>=72 &&
+      dilution<=6
+  ){
+    verdict='BUY';
+    reasons.push('conservative case stays profitable and base net/ROI clear the capital hurdle');
+  }else{
+    verdict='HOLD';
+    reasons.push('economics are interesting but do not clear every buy gate yet');
+  }
+
+  if(diff>=8) reasons.push('inventory is strongly differentiated');
+  if(scarcity>=8) reasons.push('event scarcity is strong');
+  if(dilution>=7) reasons.push('dilution risk is elevated');
+  if(longHold && base.netPerTicket>=75) reasons.push('base net per ticket clears the long-hold target');
+
+  const event=esc($('dEvent').value.trim()||'Live cart');
+  const note=esc($('dNote').value.trim()||'No live note entered.');
+  const badge=verdict==='BUY'?'BUY':verdict==='WALK'?'WALK':'HOLD';
+
+  $('decisionResult').innerHTML=`
+    <div class="decisionVerdict">
+      <div>
+        <div style="font-size:10px;color:#9da7b8;font-weight:800">LIVE VERDICT</div>
+        <div style="font-weight:900;margin-top:3px">${event}</div>
+      </div>
+      <div class="verdictBadge ${badge}">${verdict==='BUY'?'BUY '+qty:verdict}</div>
+    </div>
+
+    <div class="decisionMetrics">
+      <div><span>COST / TICKET</span><b>${money2(cart/qty)}</b></div>
+      <div><span>CAPITAL DEPLOYMENT</span><b>${deploy==null?'Enter bankroll':pct(deploy)}</b></div>
+      <div><span>DRY POWDER AFTER</span><b>${dry==null?'—':money2(dry)}</b></div>
+      <div><span>HOME-RUN SCORE</span><b>${homeRun}/100</b></div>
+    </div>
+
+    <table class="scenarioTable">
+      <thead><tr><th>Scenario</th><th>Resale/tix</th><th>Seller payout</th><th>Net profit</th><th>ROI</th></tr></thead>
+      <tbody>
+        <tr><td>Conservative</td><td>${money2(nval('dCons'))}</td><td>${money2(cons.payout)}</td><td>${money2(cons.net)}</td><td>${pct(cons.roi)}</td></tr>
+        <tr><td>Base</td><td>${money2(nval('dBase'))}</td><td>${money2(base.payout)}</td><td>${money2(base.net)}</td><td>${pct(base.roi)}</td></tr>
+        <tr><td>Upside</td><td>${money2(nval('dUp'))}</td><td>${money2(up.payout)}</td><td>${money2(up.net)}</td><td>${pct(up.roi)}</td></tr>
+      </tbody>
+    </table>
+
+    <div class="decisionWhy"><b>WHY:</b> ${esc(reasons.join('; '))}.<br><b>LIVE EVIDENCE:</b> ${note}</div>
+    ${longHold?`<div class="decisionWarn"><b>LONG-HOLD GATE:</b> Ticket Edge generally wants a credible path to roughly $60–$75+ NET profit per ticket for a 4–6+ month speculative hold, with stronger preference for $100+ net on differentiated premium inventory.</div>`:''}
+  `;
+
+  try{
+    localStorage.setItem('ticketEdge.liveDecisionDraft', JSON.stringify({
+      event:$('dEvent').value,qty,cart,bankroll,fee,hold,transfer,
+      cons:nval('dCons'),base:nval('dBase'),up:nval('dUp'),
+      scarcity,diff,dilution,note:$('dNote').value
+    }));
+  }catch(_){}
+}
+
+function clearLiveCart(){
+  ['dEvent','dCart','dBankroll','dCons','dBase','dUp','dNote'].forEach(id=>{ if($(id)) $(id).value=''; });
+  $('dQty').value='2'; $('dFee').value='10'; $('dHold').value='2';
+  $('dTransfer').value='unverified'; $('dScarcity').value='6'; $('dDiff').value='5'; $('dDilution').value='4';
+  localStorage.removeItem('ticketEdge.liveDecisionDraft');
+  $('decisionResult').innerHTML='<div class="empty" style="padding:12px">Enter the cart + realistic comps, then tap Analyze Cart.</div>';
+}
+
+function restoreLiveDecisionDraft(){
+  try{
+    const d=JSON.parse(localStorage.getItem('ticketEdge.liveDecisionDraft')||'null');
+    if(!d) return;
+    const vals={dEvent:d.event,dQty:d.qty,dCart:d.cart,dBankroll:d.bankroll,dFee:d.fee,dHold:d.hold,dTransfer:d.transfer,dCons:d.cons,dBase:d.base,dUp:d.up,dScarcity:d.scarcity,dDiff:d.diff,dDilution:d.dilution,dNote:d.note};
+    for(const [id,v] of Object.entries(vals)) if($(id) && v!=null) $(id).value=v;
+  }catch(_){}
+}
+
+
+async function loadAll(){
+  await Promise.allSettled([loadInventory(), loadIntel()]);
+}
+function setFilter(value,el){activeFilter=value;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');render();}
+function latestChange(id){return changes.find(c=>c.opportunity_id===id);}
+function nextPresale(id){
+  const o=opportunities.find(x=>x.id===id);
+  const now=Date.now();
+  const p=presales.filter(p=>p.opportunity_id===id&&p.presale_start&&new Date(p.presale_start).getTime()>=now)
+    .sort((a,b)=>new Date(a.presale_start)-new Date(b.presale_start))[0];
+  if(p) return p;
+  if(o?.presale_start && new Date(o.presale_start).getTime()>=now) return oppAccess(o,null);
+  if(o?.onsale_start && new Date(o.onsale_start).getTime()>=now) return {
+    presale_start:o.onsale_start,
+    registration_deadline:o.registration_deadline,
+    provider:o.access_method||'General sale',
+    presale_type:'General sale',
+    notes:o.prep_reason,
+    access_method:o.access_method
+  };
+  return null;
+}
+
+
+function prefillDecisionFromOpportunity(id){
+  const o=opportunities.find(x=>x.id===id);
+  if(!o) return;
+  if($('dEvent')) $('dEvent').value=[o.artist,o.city,o.venue].filter(Boolean).join(' — ');
+  if($('dQty') && o.recommended_quantity) $('dQty').value=o.recommended_quantity;
+  if($('dCart') && o.acquisition_cost_total) $('dCart').value=o.acquisition_cost_total;
+  if($('dBankroll') && o.bankroll_available_at_decision) $('dBankroll').value=o.bankroll_available_at_decision;
+  if($('dFee') && o.seller_fee_pct!=null) $('dFee').value=o.seller_fee_pct;
+  if($('dCons') && o.conservative_resale_per_ticket!=null) $('dCons').value=o.conservative_resale_per_ticket;
+  if($('dBase') && o.base_resale_per_ticket!=null) $('dBase').value=o.base_resale_per_ticket;
+  if($('dUp') && o.upside_resale_per_ticket!=null) $('dUp').value=o.upside_resale_per_ticket;
+  if($('dScarcity') && o.scarcity_score!=null) $('dScarcity').value=Math.max(1,Math.min(10,Math.round(Number(o.scarcity_score)/10)));
+  if($('dDiff') && o.differentiation_score!=null) $('dDiff').value=Math.max(1,Math.min(10,Number(o.differentiation_score)));
+  if($('dDilution') && o.dilution_score!=null) $('dDilution').value=Math.max(1,Math.min(10,Number(o.dilution_score)));
+  if($('dTransfer')){
+    const t=String(o.transfer_eligibility||'').toLowerCase();
+    $('dTransfer').value=['verified','allowed','transferable'].includes(t)?'verified':['blocked','prohibited','non-transferable'].includes(t)?'blocked':'unverified';
+  }
+  if($('dNote')) $('dNote').value=[o.target_inventory,o.prep_reason,o.comp_quality].filter(Boolean).join(' • ');
+  document.getElementById('liveDecisionSection')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function readinessPills(o,p){
+  const parts=[];
+  const gate=resaleGate(o);
+  parts.push(`<span class="readyPill ${gate.level==='ok'?'good':gate.level==='block'?'bad':'warn'}">${gate.level==='ok'?'Transfer verified':gate.level==='block'?'Transfer blocked':'Transfer unverified'}</span>`);
+  parts.push(`<span class="readyPill ${o.base_net_profit!=null?'good':'warn'}">${o.base_net_profit!=null?'Economics loaded':'Needs comps/economics'}</span>`);
+  parts.push(`<span class="readyPill ${o.target_inventory?'good':'warn'}">${o.target_inventory?'Target inventory set':'Target inventory needed'}</span>`);
+  if(p?.presale_start || o.onsale_start) parts.push(`<span class="readyPill good">Drop time loaded</span>`);
+  if(o.evidence_checked_at) parts.push(`<span class="readyPill good">Evidence timestamped</span>`);
+  return `<div class="oppReadiness">${parts.join('')}</div>`;
+}
+
+function actionLabel(o){
+  if(o.recommendation==='BUY') return 'BUY DECISION READY';
+  if(o.recommendation==='REGISTER') return 'REGISTER';
+  if(o.prep_state) return String(o.prep_state).toUpperCase();
+  return o.recommendation||'WATCH';
+}
+
+function render(){
+  const q=$('search').value.trim().toLowerCase();
+
+  $('mBuy').textContent=opportunities.filter(x=>x.recommendation==='BUY').length;
+  $('mRegister').textContent=opportunities.filter(x=>x.recommendation==='REGISTER').length;
+  $('mWatch').textContent=opportunities.filter(x=>x.recommendation==='WATCH').length;
+  $('mGem').textContent=opportunities.filter(x=>x.hidden_gem).length;
+
+  const rows=opportunities.filter(o=>{
+    if(activeFilter!=='ALL'&&o.recommendation!==activeFilter)return false;
+    if(!q)return true;
+    return [
+      o.artist,o.event_name,o.city,o.state,o.venue,o.broker_thesis,o.recommendation_reason,
+      o.prep_state,o.access_method,o.target_inventory
+    ].join(' ').toLowerCase().includes(q);
+  });
+
+  if(!rows.length){
+    $('eventList').innerHTML=`<div class="empty">
+      <b>No real opportunities in this view yet.</b><br><br>
+      Beta fixtures are excluded from this dashboard.
+      <div class="oppEmptyCTA">The production feed is ready for scanner/imported opportunities. Ticket Edge will not manufacture BUY signals just to fill the screen.</div>
+    </div>`;
+    return;
+  }
+
+  rows.sort((a,b)=>{
+    const ap=nextPresale(a.id), bp=nextPresale(b.id);
+    const av=Number(effectiveScore(a)||0)+(a.recommendation==='BUY'?20:0)+(a.hidden_gem?5:0)+(hoursUntil(ap?.presale_start)<=24?8:0);
+    const bv=Number(effectiveScore(b)||0)+(b.recommendation==='BUY'?20:0)+(b.hidden_gem?5:0)+(hoursUntil(bp?.presale_start)<=24?8:0);
+    return bv-av;
+  });
+
+  $('eventList').innerHTML=rows.map((o,idx)=>{
+    const c=latestChange(o.id), p=nextPresale(o.id);
+    const title=o.event_name?`${o.artist} — ${o.event_name}`:o.artist;
+    const trend=c&&c.previous_score!=null&&c.new_score!=null?c.new_score-c.previous_score:null;
+    const trendText=trend==null?'':trend>0?` ↑${trend}`:trend<0?` ↓${Math.abs(trend)}`:'';
+    const resale=(o.expected_resale_low!=null||o.expected_resale_high!=null)
+      ? `${money(o.expected_resale_low)}–${money(o.expected_resale_high)}`
+      : o.base_resale_per_ticket!=null ? money(o.base_resale_per_ticket) : '—';
+    const prep=effectivePrep(o,p);
+    const score=effectiveScore(o);
+    const gate=resaleGate(o);
+
+    return `<article class="event">
+      <div class="eventTop">
+        <div class="headline">
+          <h3>${idx<3?`<span class="priority">#${idx+1} PRIORITY</span>`:''}${esc(title)}</h3>
+          <div class="meta">${esc(o.city||'')}${o.state?', '+esc(o.state):''}${o.venue?' • '+esc(o.venue):''}${o.event_date?' • '+fmtDate(o.event_date):''}</div>
+          <div class="tags">
+            <span class="tag">${esc(o.category||'event')}</span>
+            <span class="tag">Decision confidence: ${o.decision_confidence??esc(o.confidence||'—')}</span>
+            ${o.hidden_gem?'<span class="tag gem">💎 HIDDEN GEM</span>':''}
+            ${o.home_run_score!=null?`<span class="tag gem">🏠 HOME-RUN ${o.home_run_score}</span>`:''}
+          </div>
+          ${readinessPills(o,p)}
+        </div>
+        <div class="rec ${esc(o.recommendation)}">${esc(o.recommendation)}<span class="score">${score??'—'}${trendText}</span></div>
+      </div>
+
+      <div class="intel">
+        <div><span>MAX BUY / TICKET</span><b>${o.max_price_per_ticket!=null?money(o.max_price_per_ticket):o.acquisition_cost_per_ticket!=null?money(o.acquisition_cost_per_ticket):'TBD'}</b></div>
+        <div><span>QUANTITY</span><b>${o.recommended_quantity??'—'}</b></div>
+        <div><span>BASE RESALE</span><b>${resale}</b></div>
+        <div><span>CAPITAL DEPLOYMENT</span><b>${pctMaybe(o.capital_deployment_pct)}</b></div>
+      </div>
+
+      ${prep?`<div class="prep"><strong>🔥 ${esc(actionLabel(o))}</strong>
+        ${p?.presale_start?`<br><span class="countdown">Drop: ${fmtDate(p.presale_start)}</span>`:''}
+        ${o.registration_deadline?`<br>Registration deadline: ${fmtDate(o.registration_deadline)}`:''}
+        ${o.access_method?`<br><b>Access:</b> ${esc(o.access_method)}`:''}
+        ${o.presale_mechanics?`<br><b>Mechanics:</b> ${esc(o.presale_mechanics)}`:''}
+        ${o.target_inventory?`<br><b>Target:</b> ${esc(o.target_inventory)}`:''}
+        ${o.prep_reason?`<br><span style="font-size:11px;color:#c7b992">${esc(o.prep_reason)}</span>`:''}
+      </div>`:''}
+
+      <div class="why"><b>Broker thesis:</b> ${esc(o.broker_thesis||o.recommendation_reason||'Awaiting deeper analysis.')}</div>
+
+      ${intelScenario(o)}
+
+      ${o.base_net_profit!=null?`<div class="change"><b>BASE CAPITAL CASE:</b> ${moneyMaybe(o.base_net_profit)} net • ${pctMaybe(o.base_roi)} ROI${o.bankroll_available_at_decision!=null?` • Bankroll at decision ${moneyMaybe(o.bankroll_available_at_decision)}`:''}</div>`:''}
+
+      ${c?`<div class="change"><b>WHAT CHANGED:</b> ${esc(c.change_summary||'')}<br><span style="color:#aeb8c8">${esc(c.change_reason||'')}</span></div>`:''}
+
+      ${p?`<div class="change"><b>NEXT ACCESS:</b> ${esc(p.provider||p.presale_type||o.access_method||'Drop')} • ${fmtDate(p.presale_start)}${p.registration_deadline?`<br>Registration deadline: ${fmtDate(p.registration_deadline)}`:''}${cardAccessFor(p).length?`<br><b style="color:#bdf6d6">YOUR CARD ACCESS: ${cardAccessFor(p).join(' / ')} — ELIGIBLE</b>`:''}</div>`:''}
+
+      <div class="change"><b>DECISION READINESS:</b>
+        ${o.base_net_profit==null?'<br>• Capture realistic Conservative / Base / Upside comps':''}
+        ${gate.level!=='ok'?'<br>• Verify transfer / resale eligibility':''}
+        ${!o.target_inventory?'<br>• Define target section / row / seat strategy':''}
+        ${(o.base_net_profit!=null && gate.level==='ok' && o.target_inventory)?'<br>✓ Core BUY gates loaded — use Live Drop Decision Mode for the exact cart.':''}
+      </div>
+
+      <div class="gate ${gate.level}"><b>${gate.label}</b><br>${gate.detail}</div>
+
+      ${o.comp_quality||o.primary_inventory_signal||o.secondary_market_signal?`<div class="change"><b>EVIDENCE:</b>
+        ${o.comp_quality?`<br>Comp quality: ${esc(o.comp_quality)}`:''}
+        ${o.primary_inventory_signal?`<br>Primary: ${esc(o.primary_inventory_signal)}`:''}
+        ${o.secondary_market_signal?`<br>Secondary: ${esc(o.secondary_market_signal)}`:''}
+      </div>`:''}
+
+      <div class="actions">
+        ${o.ticket_url?`<button class="btn good small" onclick="window.open('${esc(o.ticket_url)}','_blank')">Open Tickets</button>`:''}
+        <button class="btn small" onclick="prefillDecisionFromOpportunity('${o.id}')">Use in Live Drop Mode</button>
+      </div>
+    </article>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
