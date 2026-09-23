@@ -7,7 +7,20 @@ import urllib.error
 from datetime import datetime, timezone
 
 SUPABASE_URL = os.environ["SUPABASE_URL"].strip().rstrip("/")
-SUPABASE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"].strip()
+
+_raw_supabase_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
+
+_key_match = re.search(
+    r"sb_secret_[A-Za-z0-9_-]+",
+    _raw_supabase_key
+)
+
+if not _key_match:
+    raise RuntimeError(
+        "SUPABASE_SERVICE_ROLE_KEY does not contain a valid sb_secret_ key"
+    )
+
+SUPABASE_KEY = _key_match.group(0)
 CATALYSTS = {
     "ADDED_SHOW": [
         "added show",
