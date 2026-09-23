@@ -1,1 +1,29 @@
+name: Ticket Edge Intelligence Engine
 
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ticket-edge-intelligence
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    name: Scan Ticket Edge Sources
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Ticket Edge
+        uses: actions/checkout@v4
+
+      - name: Run Ticket Edge scanner
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python3 ticket_edge_scanner.py
