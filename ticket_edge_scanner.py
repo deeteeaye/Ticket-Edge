@@ -6,9 +6,8 @@ import urllib.request
 import urllib.error
 from datetime import datetime, timezone
 
-SUPABASE_URL = os.environ["SUPABASE_URL"].rstrip("/")
-SUPABASE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-
+SUPABASE_URL = os.environ["SUPABASE_URL"].strip().rstrip("/")
+SUPABASE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"].strip()
 CATALYSTS = {
     "ADDED_SHOW": [
         "added show",
