@@ -1,76 +1,395 @@
-#!/usr/bin/env python3
-import os,json,re,hashlib,urllib.request
-from datetime import datetime,timezone
+import os
+import re
+import json
+import hashlib
+import urllib.request
+import urllib.error
+from datetime import datetime, timezone
 
-URL=os.environ['SUPABASE_URL'].rstrip('/')
-KEY=os.environ['SUPABASE_SERVICE_ROLE_KEY']
-H={'apikey':KEY,'Authorization':f'Bearer {KEY}','Content-Type':'application/json','User-Agent':'TicketEdge/11.0 (+zero-cost public-source monitor)'}
-KEYWORDS=['presale','pre-sale','on sale','onsale','tickets on sale','added show','second show','new date','venue upgrade','artist presale','venue presale','amex','american express','citi','visa','register','registration','general sale','live nation presale','vip package presale']
-CATS=[('ADDED_SHOW',['added show','second show','new date']),('PRESALE',['presale','pre-sale','artist presale','venue presale','amex','american express','citi','visa','live nation presale','vip package presale']),('GENERAL_ONSALE',['general sale','on sale','onsale','tickets on sale']),('REGISTRATION',['register','registration','sign up']),('VENUE_UPGRADE',['venue upgrade'])]
+SUPABASE_URL = os.environ["SUPABASE_URL"].rstrip("/")
+SUPABASE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
 
-def api(path,method='GET',body=None,headers=None):
-    hh=dict(H); hh.update(headers or {})
-    data=None if body is None else json.dumps(body).encode()
-    req=urllib.request.Request(f'{URL}/rest/v1/{path}',data=data,headers=hh,method=method)
-    with urllib.request.urlopen(req,timeout=30) as r:
-        raw=r.read().decode() or 'null'; return json.loads(raw)
+CATALYSTS = {
+    "ADDED_SHOW": [
+        "added show",
+        "second show",
+        "new date",
+    ],
+    "PRESALE": [
+        "presale",
+        "pre-sale",
+        "artist presale",
+        "venue presale",
+        "live nation presale",
+        "vip package presale",
+        "amex",
+        "american express",
+        "citi",
+        "visa",
+    ],
+    "GENERAL_ONSALE": [
+        "on sale",
+        "onsale",
+        "tickets on sale",
+        "general sale",
+    ],
+    "REGISTRATION": [
+        "register",
+        "registration",
+    ],
+    "VENUE_UPGRADE": [
+        "venue upgrade",
+        "upgraded venue",
+    ],
+}
 
-def textify(html):
-    html=re.sub(r'(?is)<script.*?>.*?</script>',' ',html); html=re.sub(r'(?is)<style.*?>.*?</style>',' ',html)
-    html=re.sub(r'(?s)<[^>]+>',' ',html); return re.sub(r'\s+',' ',html).strip()
+
+def api(path, method="GET", payload=None, extra_headers=None):
+    url = f"{SUPABASE_URL}/rest/v1/{path}"
+
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "ticket-edge-intelligence/11.0",
+    }
+
+    if extra_headers:
+        headers.update(extra_headers)
+
+    data = None
+    if payload is not None:
+        data = json.dumps(payload).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers=headers,
+        method=method,
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            body = response.read().decode("utf-8")
+            if not body:
+                return None
+            return json.loads(body)
+
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(
+            f"Supabase HTTP {exc.code} on {method} {path}: {body}"
+        ) from exc
+
 
 def fetch(url):
-    req=urllib.request.Request(url,headers={'User-Agent':H['User-Agent']})
-    with urllib.request.urlopen(req,timeout=25) as r: return r.status,r.read(2_000_000).decode('utf-8','ignore')
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": (
+                "TicketEdge/11.0 public-event-discovery "
+                "(contact: repository owner)"
+            )
+        },
+    )
 
-def classify(t):
-    lo=t.lower(); hits=[k for k in KEYWORDS if k in lo]
-    for name,terms in CATS:
-        if any(x in lo for x in terms): return hits,name
-    return hits,None
+    with urllib.request.urlopen(req, timeout=30) as response:
+        return response.status, response.read().decode(
+            "utf-8",
+            errors="replace",
+        )
 
-def schedules(t):
-    p=r'((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:\s+(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday))?\s+\d{1,2}(?::\d{2})?\s*(?:AM|PM)\s*(?:[A-Z]{2,4})?)'
-    out=[]
-    for x in re.findall(p,t,re.I):
-        x=re.sub(r'\s+',' ',x).strip()
-        if x.lower() not in [z.lower() for z in out]: out.append(x)
-    return out[:12]
 
-def metadata(t,s):
-    hits,cat=classify(t); lo=t.lower(); ss=s['source_name']; event=None
-    if '—' in ss: event=ss.split('—',1)[1].strip()
-    vm=re.search(r'Venue\s+Details\s+([A-Z][A-Za-z0-9&\'().,\- ]{2,100})',t,re.I); venue=vm.group(1).strip() if vm else None
-    lm=re.search(r'([A-Z][A-Za-z .\'-]+),\s*([A-Z]{2})\s+\d{5}',t); city,state=(lm.group(1).strip(),lm.group(2)) if lm else (None,None)
-    sch=schedules(t); conf=(25 if cat else 0)+(20 if sch else 0)+(15 if event else 0)+(10 if venue else 0)+(10 if city else 0)+(10 if 'tickets go on sale' in lo else 0)+(10 if 'sign up' in lo or 'registration' in lo else 0)
-    card='AMEX' if any(x in hits for x in ['amex','american express']) else 'CITI' if 'citi' in hits else 'VISA' if 'visa' in hits else None
-    access='cardmember' if card else 'registration' if any(x in hits for x in ['register','registration']) else 'public/unknown'
-    return dict(catalyst_hits=hits,catalyst_type=cat,event_name=event,venue=venue,city=city,state=state,schedule_texts=sch,candidate_confidence=min(conf,100),card_type=card,access_method=access)
+def textify(html):
+    html = re.sub(
+        r"<script\b[^>]*>.*?</script>",
+        " ",
+        html,
+        flags=re.I | re.S,
+    )
+    html = re.sub(
+        r"<style\b[^>]*>.*?</style>",
+        " ",
+        html,
+        flags=re.I | re.S,
+    )
+    html = re.sub(r"<[^>]+>", " ", html)
+    html = re.sub(r"&nbsp;", " ", html, flags=re.I)
+    html = re.sub(r"&amp;", "&", html, flags=re.I)
+    html = re.sub(r"\s+", " ", html)
+    return html.strip()
 
-def patch_source(i,p): api(f'scanner_sources?id=eq.{i}','PATCH',p,{'Prefer':'return=minimal'})
-def upsert(p): api('scanner_candidates?on_conflict=owner_user_id,fingerprint','POST',p,{'Prefer':'resolution=merge-duplicates,return=minimal'})
+
+def detect_catalysts(text):
+    lower = text.lower()
+    hits = []
+    types = []
+
+    for catalyst_type, phrases in CATALYSTS.items():
+        matched = [phrase for phrase in phrases if phrase in lower]
+
+        if matched:
+            types.append(catalyst_type)
+            hits.extend(matched)
+
+    primary = types[0] if types else None
+
+    return primary, sorted(set(hits))
+
+
+def extract_title(text):
+    patterns = [
+        r"([A-Z][A-Za-z0-9 '&.\-]{2,80})\s+(?:Tickets|Presale|Concert)",
+        r"(?:Tickets for|See)\s+([A-Z][A-Za-z0-9 '&.\-]{2,80})",
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, text)
+
+        if match:
+            return match.group(1).strip()
+
+    return None
+
+
+def detect_card_type(text):
+    lower = text.lower()
+    cards = []
+
+    if "american express" in lower or "amex" in lower:
+        cards.append("AMEX")
+
+    if "citi" in lower:
+        cards.append("CITI")
+
+    if "visa" in lower:
+        cards.append("VISA")
+
+    return ", ".join(cards) if cards else None
+
+
+def metadata(text, source):
+    catalyst_type, catalyst_hits = detect_catalysts(text)
+    event_name = extract_title(text)
+
+    confidence = 0
+
+    if event_name:
+        confidence += 25
+
+    if catalyst_hits:
+        confidence += 35
+
+    if source.get("parser_profile") == "ticketmaster_event":
+        confidence += 20
+
+    if source.get("source_category") in (
+        "ticketing_event",
+        "venue",
+    ):
+        confidence += 10
+
+    confidence = min(confidence, 100)
+
+    return {
+        "catalyst_type": catalyst_type,
+        "catalyst_hits": catalyst_hits,
+        "artist": event_name,
+        "event_name": event_name,
+        "venue": None,
+        "city": None,
+        "state": None,
+        "schedule_text": None,
+        "card_type": detect_card_type(text),
+        "access_method": catalyst_type,
+        "candidate_confidence": confidence,
+    }
+
+
+def patch_source(source_id, payload):
+    return api(
+        f"scanner_sources?id=eq.{source_id}",
+        "PATCH",
+        payload,
+        {"Prefer": "return=minimal"},
+    )
+
+
+def upsert_candidate(payload):
+    return api(
+        "scanner_candidates"
+        "?on_conflict=owner_user_id,fingerprint",
+        "POST",
+        payload,
+        {
+            "Prefer":
+                "resolution=merge-duplicates,return=representation"
+        },
+    )
+
+
+def run_maintenance():
+    # RPC endpoints live under /rest/v1/rpc/<function>.
+    return api(
+        "rpc/ticket_edge_run_maintenance",
+        "POST",
+        {},
+    )
+
 
 def main():
-    sources=api('scanner_sources?enabled=eq.true&select=id,owner_user_id,source_name,source_url,last_content_hash&order=source_priority.desc')
-    print('enabled sources:',len(sources))
-    for s in sources:
-        now=datetime.now(timezone.utc).isoformat()
-        try:
-            status,raw=fetch(s['source_url']); txt=textify(raw); digest=hashlib.sha256(txt.encode()).hexdigest(); changed=digest!=(s.get('last_content_hash') or '')
-            m=metadata(txt,s); patch={'last_checked_at':now,'last_http_status':status,'last_content_hash':digest,'updated_at':now,'consecutive_failures':0,'last_error':None}
-            if changed: patch['last_change_at']=now
-            patch_source(s['id'],patch)
-            if changed and m['catalyst_hits']:
-                lo=txt.lower(); pos=[lo.find(k.lower()) for k in m['catalyst_hits'] if lo.find(k.lower())>=0]; first=min(pos or [0]); excerpt=txt[max(0,first-400):first+1600]
-                efp=hashlib.sha256('|'.join([(m.get('event_name') or '').lower(),(m.get('venue') or '').lower(),(m.get('city') or '').lower(),(m.get('state') or '').lower()]).encode()).hexdigest()
-                fp=hashlib.sha256(f"{s['id']}|{digest}|{efp}".encode()).hexdigest()
-                upsert({'owner_user_id':s['owner_user_id'],'source_id':s['id'],'title':m['event_name'] or f"{s['source_name']}: ticket-drop change",'event_url':s['source_url'],'raw_excerpt':excerpt[:3000],'fingerprint':fp,'status':'NEW','catalyst_type':m['catalyst_type'],'catalyst_hits':m['catalyst_hits'][:20],'event_name':m['event_name'],'venue':m['venue'],'city':m['city'],'state':m['state'],'access_method':m['access_method'],'card_type':m['card_type'],'candidate_confidence':m['candidate_confidence'],'event_fingerprint':efp,'normalized_status':'REVIEW','lifecycle_state':'UNSCHEDULED','last_seen_at':now,'extracted_json':{'schedule_texts':m['schedule_texts']}})
-                print('candidate:',s['source_name'],'|',m['catalyst_type'],'| confidence=',m['candidate_confidence'])
-            else: print('checked:',s['source_name'],'changed=',changed,'hits=',len(m['catalyst_hits']))
-        except Exception as e:
-            print('ERROR',s['source_name'],e)
-            try: patch_source(s['id'],{'last_checked_at':now,'last_http_status':0,'updated_at':now,'consecutive_failures':1,'last_error':str(e)[:1000]})
-            except Exception: pass
-    print('maintenance:',api('rpc/ticket_edge_run_maintenance','POST',{}))
+    sources = api(
+        "scanner_sources"
+        "?enabled=eq.true"
+        "&select=*"
+        "&order=source_priority.desc"
+    )
 
-if __name__=='__main__': main()
+    print(f"enabled sources: {len(sources or [])}")
+
+    for source in sources or []:
+        now = datetime.now(timezone.utc).isoformat()
+
+        try:
+            status, raw = fetch(source["source_url"])
+            text = textify(raw)
+
+            digest = hashlib.sha256(
+                text.encode("utf-8")
+            ).hexdigest()
+
+            changed = (
+                digest != source.get("last_content_hash")
+            )
+
+            info = metadata(text, source)
+
+            patch = {
+                "last_checked_at": now,
+                "last_http_status": status,
+                "last_content_hash": digest,
+                "updated_at": now,
+                "consecutive_failures": 0,
+                "last_error": None,
+            }
+
+            if changed:
+                patch["last_change_at"] = now
+
+            patch_source(source["id"], patch)
+
+            if changed and info["catalyst_hits"]:
+                event_fp_source = "|".join(
+                    [
+                        (info.get("event_name") or "").lower(),
+                        (info.get("venue") or "").lower(),
+                        (info.get("city") or "").lower(),
+                        (info.get("state") or "").lower(),
+                    ]
+                )
+
+                event_fingerprint = hashlib.sha256(
+                    event_fp_source.encode("utf-8")
+                ).hexdigest()
+
+                fingerprint = hashlib.sha256(
+                    (
+                        f"{source['id']}|"
+                        f"{digest}|"
+                        f"{event_fingerprint}"
+                    ).encode("utf-8")
+                ).hexdigest()
+
+                candidate = {
+                    "owner_user_id": source["owner_user_id"],
+                    "source_id": source["id"],
+                    "title": (
+                        info["event_name"]
+                        or f"{source['source_name']}: catalyst"
+                    ),
+                    "event_url": source["source_url"],
+                    "raw_excerpt": text[:1500],
+                    "fingerprint": fingerprint,
+                    "status": "new",
+                    "catalyst_type": info["catalyst_type"],
+                    "catalyst_hits": info["catalyst_hits"],
+                    "artist": info["artist"],
+                    "event_name": info["event_name"],
+                    "venue": info["venue"],
+                    "city": info["city"],
+                    "state": info["state"],
+                    "access_method": info["access_method"],
+                    "card_type": info["card_type"],
+                    "candidate_confidence":
+                        info["candidate_confidence"],
+                    "event_fingerprint": event_fingerprint,
+                    "normalized_status": "REVIEW",
+                    "lifecycle_state": "UNSCHEDULED",
+                    "first_seen_at": now,
+                    "last_seen_at": now,
+                    "extracted_json": {
+                        "schedule_text":
+                            info["schedule_text"],
+                        "scanner_version": "11.0.1",
+                    },
+                }
+
+                upsert_candidate(candidate)
+
+                print(
+                    "candidate:",
+                    source["source_name"],
+                    "|",
+                    info["catalyst_type"],
+                    "| confidence=",
+                    info["candidate_confidence"],
+                )
+
+            else:
+                print(
+                    "checked:",
+                    source["source_name"],
+                    "changed=",
+                    changed,
+                    "hits=",
+                    len(info["catalyst_hits"]),
+                )
+
+        except Exception as exc:
+            print(
+                "ERROR:",
+                source.get("source_name"),
+                str(exc),
+            )
+
+            try:
+                patch_source(
+                    source["id"],
+                    {
+                        "last_checked_at": now,
+                        "last_http_status": 0,
+                        "updated_at": now,
+                        "consecutive_failures":
+                            int(
+                                source.get(
+                                    "consecutive_failures",
+                                    0,
+                                )
+                                or 0
+                            )
+                            + 1,
+                        "last_error": str(exc)[:1000],
+                    },
+                )
+            except Exception as patch_exc:
+                print(
+                    "SOURCE ERROR PATCH FAILED:",
+                    str(patch_exc),
+                )
+
+    maintenance = run_maintenance()
+    print("maintenance:", maintenance)
+
+
+if __name__ == "__main__":
+    main()
